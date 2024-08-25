@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Aluno</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilo específico para a seção de turmas */
+        .turmas-container {
+            margin-top: 20px;
+        }
+
+        .turmas-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .turmas-container th, .turmas-container td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .turmas-container th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .turmas-container td input[type="checkbox"] {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Adicionar Aluno</h1>
+
+        <form id="adicionarAlunoForm">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="matricula">Matrícula:</label>
+            <input type="text" id="matricula" name="matricula" required>
+
+            <div class="turmas-container">
+                <label>Turmas:</label>
+                <!-- Tabela para exibir as turmas com checkboxes -->
+                <table id="turmasTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Nome da Turma</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Linhas de turmas serão adicionadas aqui -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="submit">Adicionar Aluno</button>
+        </form>
+    </div>
+
+    <script>
+        // Função para carregar as turmas e preencher a tabela
+        function carregarTurmas() {
+            fetch('http://167.234.254.164:8088/turmas')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#turmasTable tbody');
+                    tableBody.innerHTML = ''; // Limpa o corpo da tabela antes de preencher
+
+                    data.forEach(turma => {
+                        // Adiciona linhas à tabela com checkboxes e nome da turma
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td><input type="checkbox" value="${turma.id}" name="turmas"></td>
+                                <td>${turma.nome} (${turma.ano}/${turma.semestre})</td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(error => alert('Erro ao carregar as turmas.'));
+        }
+
+        // Função para adicionar um novo aluno
+        function adicionarAluno(event) {
+            event.preventDefault(); // Evita o envio do formulário padrão
+
+            const nome = document.getElementById('nome').value;
+            const matricula = document.getElementById('matricula').value;
+            const turmaIds = Array.from(document.querySelectorAll('input[name="turmas"]:checked')).map(checkbox => checkbox.value);
+
+            if (!nome || !matricula || turmaIds.length === 0) {
+                alert('Todos os campos devem ser preenchidos e pelo menos uma turma deve ser selecionada.');
+                return;
+            }
+
+            fetch('http://167.234.254.164:8088/alunos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: nome,
+                    matricula: matricula,
+                    turma_ids: turmaIds.map(id => parseInt(id)) // Converte IDs para números
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(error => { throw new Error(error.message); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Aluno adicionado com sucesso!');
+                window.location.href = 'alunos.html'; // Redireciona para a página de alunos
+            })
+            .catch(error => alert(`Erro ao adicionar o aluno: ${error.message}`));
+        }
+
+        // Carrega as turmas e configura o formulário quando a página é carregada
+        window.onload = function() {
+            carregarTurmas();
+            document.getElementById('adicionarAlunoForm').addEventListener('submit', adicionarAluno);
+        };
+    </script>
+
+</body>
+</html>

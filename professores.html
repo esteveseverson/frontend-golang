@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Gerenciamento de Professores</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Gerenciamento de Professores</h1>
+        
+        <button onclick="window.location.href='adicionar_professor.html'">Adicionar Professor</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>CPF</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="professorTableBody">
+                <!-- Linhas da tabela serão preenchidas dinamicamente com JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Função para carregar os professores da API
+        function carregarProfessores() {
+            fetch('http://167.234.254.164:8088/professores')
+                .then(response => response.json())
+                .then(data => {
+                    const tabela = document.getElementById('professorTableBody');
+                    tabela.innerHTML = ''; // Limpa a tabela antes de preencher
+                    data.forEach(professor => {
+                        tabela.innerHTML += `
+                            <tr>
+                                <td>${professor.nome}</td>
+                                <td>${professor.email}</td>
+                                <td>${professor.cpf}</td>
+                                <td>
+                                    <button onclick="editarProfessor(${professor.id})">Editar</button>
+                                    <button onclick="deletarProfessor(${professor.id})">Deletar</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        // Função para editar um professor (redireciona para a página de edição)
+        function editarProfessor(id) {
+            window.location.href = `editar_professor.html?id=${id}`;
+        }
+
+        // Função para deletar um professor
+        function deletarProfessor(id) {
+            if (confirm('Tem certeza que deseja deletar este professor?')) {
+                fetch(`http://167.234.254.164:8088/professores/${id}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Professor deletado com sucesso!');
+                    carregarProfessores(); // Recarrega a tabela após deletar
+                })
+                .catch(error => alert('Erro ao deletar o professor.'));
+            }
+        }
+
+        // Carrega os professores quando a página é carregada
+        window.onload = carregarProfessores;
+    </script>
+
+</body>
+</html>

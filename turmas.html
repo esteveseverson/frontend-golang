@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Gerenciamento de Turmas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Gerenciamento de Turmas</h1>
+        
+        <button onclick="window.location.href='adicionar_turma.html'">Adicionar Turma</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Ano/ Semestre</th>
+                    <th>Professor ID</th>
+                    <th>Nome do Professor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="turmaTableBody">
+                <!-- Linhas da tabela serão preenchidas dinamicamente com JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let professores = {};
+
+        // Função para carregar os professores e armazenar em um objeto
+        function carregarProfessores() {
+            return fetch('http://167.234.254.164:8088/professores')
+                .then(response => response.json())
+                .then(data => {
+                    professores = data.reduce((acc, professor) => {
+                        acc[professor.id] = professor.nome;
+                        return acc;
+                    }, {});
+                })
+                .catch(error => alert('Erro ao carregar os professores.'));
+        }
+
+        // Função para carregar as turmas da API
+        function carregarTurmas() {
+            fetch('http://167.234.254.164:8088/turmas')
+                .then(response => response.json())
+                .then(data => {
+                    const tabela = document.getElementById('turmaTableBody');
+                    tabela.innerHTML = ''; // Limpa a tabela antes de preencher
+                    data.forEach(turma => {
+                        tabela.innerHTML += `
+                            <tr>
+                                <td>${turma.nome}</td>
+                                <td>${turma.ano}/${turma.semestre}</td>
+                                <td>${turma.professor_id}</td>
+                                <td>${professores[turma.professor_id] || 'Desconhecido'}</td>
+                                <td>
+                                    <button onclick="editarTurma(${turma.id})">Editar</button>
+                                    <button onclick="deletarTurma(${turma.id})">Deletar</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(error => alert('Erro ao carregar as turmas.'));
+        }
+
+        // Função para editar uma turma (redireciona para a página de edição)
+        function editarTurma(id) {
+            window.location.href = `editar_turma.html?id=${id}`;
+        }
+
+        // Função para deletar uma turma
+        function deletarTurma(id) {
+            if (confirm('Tem certeza que deseja deletar esta turma?')) {
+                fetch(`http://167.234.254.164:8088/turmas/${id}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Turma deletada com sucesso!');
+                    carregarTurmas(); // Recarrega a tabela após deletar
+                })
+                .catch(error => alert('Erro ao deletar a turma.'));
+            }
+        }
+
+        // Carrega os dados necessários quando a página é carregada
+        window.onload = function() {
+            carregarProfessores().then(carregarTurmas);
+        };
+    </script>
+
+</body>
+</html>

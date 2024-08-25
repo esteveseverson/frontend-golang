@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Adicionar Turma</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Adicionar Turma</h1>
+
+        <form id="adicionarTurmaForm">
+            <label for="nome">Nome da Turma:</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="ano">Ano:</label>
+            <input type="text" id="ano" name="ano" required>
+
+            <label for="semestre">Semestre:</label>
+            <input type="text" id="semestre" name="semestre" required>
+
+            <label for="professor_id">Nome do Professor:</label>
+            <select id="professor_id" name="professor_id" required>
+                <!-- Opções serão preenchidas dinamicamente -->
+            </select>
+
+            <button type="submit">Adicionar Turma</button>
+        </form>
+    </div>
+
+    <script>
+        // Função para carregar os professores e preencher o select
+        function carregarProfessores() {
+            fetch('http://167.234.254.164:8088/professores')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('professor_id');
+
+                    select.innerHTML = ''; // Limpa o select antes de preencher
+
+                    data.forEach(professor => {
+                        // Adiciona opções ao select com o nome do professor e o ID como valor
+                        select.innerHTML += `<option value="${professor.id}">${professor.nome}</option>`;
+                    });
+                })
+                .catch(error => alert('Erro ao carregar os professores.'));
+        }
+
+        // Função para adicionar uma nova turma
+        function adicionarTurma(event) {
+            event.preventDefault(); // Evita o envio do formulário padrão
+
+            const nome = document.getElementById('nome').value;
+            const ano = document.getElementById('ano').value;
+            const semestre = document.getElementById('semestre').value;
+            const professorId = document.getElementById('professor_id').value;
+
+            console.log({ nome, ano, semestre, professorId }); // Adicione este log
+
+            if (!nome || !ano || !semestre || !professorId) {
+                alert('Todos os campos devem ser preenchidos.');
+                return;
+            }
+
+            fetch('http://167.234.254.164:8088/turmas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: nome,
+                    ano: parseInt(ano), // Certifique-se de que os valores são do tipo correto
+                    semestre: parseInt(semestre),
+                    professor_id: parseInt(professorId) // Certifique-se de que o valor é um número
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(error => { throw new Error(error.message); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Turma adicionada com sucesso!');
+                window.location.href = 'turmas.html'; // Redireciona para a página de turmas
+            })
+            .catch(error => alert(`Erro ao adicionar a turma: ${error.message}`));
+        }
+
+
+        // Carrega os professores e configura o formulário quando a página é carregada
+        window.onload = function() {
+            carregarProfessores();
+            document.getElementById('adicionarTurmaForm').addEventListener('submit', adicionarTurma);
+        };
+    </script>
+
+</body>
+</html>

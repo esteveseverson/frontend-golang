@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Editar Turma</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Editar Turma</h1>
+
+        <form id="editarTurmaForm">
+            <input type="hidden" id="turma_id">
+
+            <label for="nome">Nome da Turma:</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="ano">Ano:</label>
+            <input type="text" id="ano" name="ano" required>
+
+            <label for="semestre">Semestre:</label>
+            <input type="text" id="semestre" name="semestre" required>
+
+            <label for="professor_id">Nome do Professor:</label>
+            <select id="professor_id" name="professor_id" required>
+                <!-- Opções serão preenchidas dinamicamente -->
+            </select>
+
+            <button type="submit">Atualizar Turma</button>
+        </form>
+    </div>
+
+    <script>
+        // Função para carregar os professores e preencher o select
+        function carregarProfessores() {
+            fetch('http://167.234.254.164:8088/professores')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('professor_id');
+                    select.innerHTML = ''; // Limpa o select antes de preencher
+
+                    data.forEach(professor => {
+                        // Adiciona opções ao select com o nome do professor e o ID como valor
+                        select.innerHTML += `<option value="${professor.id}">${professor.nome}</option>`;
+                    });
+                })
+                .catch(error => alert('Erro ao carregar os professores.'));
+        }
+
+        // Função para carregar os dados da turma e preencher o formulário
+        function carregarTurma(turmaId) {
+            fetch(`http://167.234.254.164:8088/turmas/${turmaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('turma_id').value = data.id;
+                    document.getElementById('nome').value = data.nome;
+                    document.getElementById('ano').value = data.ano;
+                    document.getElementById('semestre').value = data.semestre;
+                    document.getElementById('professor_id').value = data.professor_id;
+                })
+                .catch(error => alert('Erro ao carregar os dados da turma.'));
+        }
+
+        // Função para atualizar uma turma
+        function atualizarTurma(event) {
+            event.preventDefault(); // Evita o envio do formulário padrão
+
+            const turmaId = document.getElementById('turma_id').value;
+            const nome = document.getElementById('nome').value;
+            const ano = document.getElementById('ano').value;
+            const semestre = document.getElementById('semestre').value;
+            const professorId = document.getElementById('professor_id').value;
+
+            fetch(`http://167.234.254.164:8088/turmas/${turmaId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: nome,
+                    ano: parseInt(ano),
+                    semestre: parseInt(semestre),
+                    professor_id: parseInt(professorId)
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(error => { throw new Error(error.message); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Turma atualizada com sucesso!');
+                window.location.href = 'turmas.html'; // Redireciona para a página de turmas
+            })
+            .catch(error => alert(`Erro ao atualizar a turma: ${error.message}`));
+        }
+
+        // Carrega os professores e os dados da turma quando a página é carregada
+        window.onload = function() {
+            carregarProfessores();
+            const urlParams = new URLSearchParams(window.location.search);
+            const turmaId = urlParams.get('id');
+            if (turmaId) {
+                carregarTurma(turmaId);
+            }
+            document.getElementById('editarTurmaForm').addEventListener('submit', atualizarTurma);
+        };
+    </script>
+
+</body>
+</html>

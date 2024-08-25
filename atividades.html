@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Atividades</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilo da tabela de atividades */
+        #atividades {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #atividades td, #atividades th {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        #atividades th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+
+        /* Estilo dos botões de ação */
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 1em;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .button:hover {
+            background-color: #388E3C;
+        }
+
+        .button.delete {
+            background-color: #4CAF50;
+        }
+
+        .button.delete:hover {
+            background-color: #388E3C;
+        }
+
+        /* Estilo do botão Adicionar Atividade */
+        .button.add {
+            margin-bottom: 20px; /* Espaço abaixo do botão */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Atividades</h1>
+
+        <a href="adicionar_atividade.html" class="button add">Adicionar Atividade</a>
+
+        <table id="atividades">
+            <thead>
+                <tr>
+                    <th>Turma</th>
+                    <th>Valor</th>
+                    <th>Data de Entrega</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Atividades serão preenchidas dinamicamente aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Função para carregar as turmas
+        function carregarTurmas() {
+            return fetch('http://167.234.254.164:8088/turmas')
+                .then(response => response.json())
+                .then(turmas => {
+                    const turmaMap = {};
+                    turmas.forEach(turma => {
+                        turmaMap[turma.id] = turma.nome;
+                    });
+                    return turmaMap;
+                })
+                .catch(error => alert('Erro ao carregar as turmas.'));
+        }
+
+        // Função para carregar as atividades
+        function carregarAtividades() {
+            carregarTurmas().then(turmaMap => {
+                fetch('http://167.234.254.164:8088/atividades')
+                    .then(response => response.json())
+                    .then(atividades => {
+                        const tbody = document.querySelector('#atividades tbody');
+                        tbody.innerHTML = ''; // Limpa o conteúdo existente
+
+                        atividades.forEach(atividade => {
+                            const tr = document.createElement('tr');
+                            const tdTurma = document.createElement('td');
+                            const tdValor = document.createElement('td');
+                            const tdDataEntrega = document.createElement('td');
+                            const tdAcoes = document.createElement('td');
+                            
+                            // Cria o conteúdo da linha
+                            tdTurma.textContent = turmaMap[atividade.turma_id] || 'Desconhecida';
+                            tdValor.textContent = atividade.valor;
+                            tdDataEntrega.textContent = atividade.data_entrega;
+
+                            // Adiciona botão de editar
+                            const editarBtn = document.createElement('a');
+                            editarBtn.href = `editar_atividade.html?id=${atividade.id}`;
+                            editarBtn.textContent = 'Editar';
+                            editarBtn.classList.add('button');
+
+                            // Adiciona botão de excluir
+                            const excluirBtn = document.createElement('button');
+                            excluirBtn.textContent = 'Excluir';
+                            excluirBtn.classList.add('button', 'delete');
+                            excluirBtn.onclick = function() {
+                                if (confirm('Tem certeza que deseja excluir esta atividade?')) {
+                                    fetch(`http://167.234.254.164:8088/atividades/${atividade.id}`, {
+                                        method: 'DELETE'
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            return response.json().then(error => { throw new Error(error.message); });
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(() => {
+                                        alert('Atividade excluída com sucesso!');
+                                        carregarAtividades(); // Recarrega a lista de atividades
+                                    })
+                                    .catch(error => alert(`Erro ao excluir a atividade: ${error.message}`));
+                                }
+                            };
+
+                            tdAcoes.appendChild(editarBtn);
+                            tdAcoes.appendChild(excluirBtn);
+
+                            tr.appendChild(tdTurma);
+                            tr.appendChild(tdValor);
+                            tr.appendChild(tdDataEntrega);
+                            tr.appendChild(tdAcoes);
+
+                            tbody.appendChild(tr);
+                        });
+                    })
+                    .catch(error => alert('Erro ao carregar as atividades.'));
+            });
+        }
+
+        // Carrega as atividades quando a página é carregada
+        window.onload = function() {
+            carregarAtividades();
+        };
+    </script>
+
+</body>
+</html>

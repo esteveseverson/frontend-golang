@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Notas</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilo da tabela de notas */
+        #notas {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #notas td, #notas th {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        #notas th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+
+        /* Estilo dos botões de ação */
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 1em;
+            color: white;
+            background-color: #4CAF50; /* Cor verde para ambos os botões */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .button:hover {
+            background-color: #388E3C; /* Cor verde mais escura ao passar o mouse */
+        }
+
+        .button.add {
+            margin-bottom: 20px; /* Espaço abaixo do botão */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Notas</h1>
+
+        <!-- Botão para Adicionar Notas -->
+        <a href="adicionar_notas.html" class="button add">Adicionar Nota</a>
+
+        <table id="notas">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th>Atividade</th>
+                    <th>Turma</th>
+                    <th>Professor</th>
+                    <th>Valor Total</th>
+                    <th>Valor Obtido</th>
+                    <th>Ações</th> <!-- Nova coluna para ações -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Notas serão preenchidas dinamicamente aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Função para carregar turmas
+        function carregarTurmas() {
+            return fetch('http://167.234.254.164:8088/turmas')
+                .then(response => response.json())
+                .then(turmas => {
+                    const turmaMap = {};
+                    turmas.forEach(turma => {
+                        turmaMap[turma.id] = turma.nome;
+                    });
+                    return turmaMap;
+                })
+                .catch(error => alert('Erro ao carregar as turmas.'));
+        }
+
+        // Função para carregar atividades
+        function carregarAtividades() {
+            return fetch('http://167.234.254.164:8088/atividades')
+                .then(response => response.json())
+                .then(atividades => {
+                    const atividadeMap = {};
+                    atividades.forEach(atividade => {
+                        atividadeMap[atividade.id] = atividade;
+                    });
+                    return atividadeMap;
+                })
+                .catch(error => alert('Erro ao carregar as atividades.'));
+        }
+
+        // Função para carregar professores
+        function carregarProfessores() {
+            return fetch('http://167.234.254.164:8088/professores')
+                .then(response => response.json())
+                .then(professores => {
+                    const professorMap = {};
+                    professores.forEach(professor => {
+                        professorMap[professor.id] = professor.nome;
+                    });
+                    return professorMap;
+                })
+                .catch(error => alert('Erro ao carregar os professores.'));
+        }
+
+        // Função para carregar alunos
+        function carregarAlunos() {
+            return fetch('http://167.234.254.164:8088/alunos')
+                .then(response => response.json())
+                .then(alunos => {
+                    const alunoMap = {};
+                    alunos.forEach(aluno => {
+                        alunoMap[aluno.id] = aluno.nome;
+                    });
+                    return alunoMap;
+                })
+                .catch(error => alert('Erro ao carregar os alunos.'));
+        }
+
+        // Função para carregar notas
+        function carregarNotas() {
+            Promise.all([carregarTurmas(), carregarAtividades(), carregarProfessores(), carregarAlunos()])
+                .then(([turmaMap, atividadeMap, professorMap, alunoMap]) => {
+                    fetch('http://167.234.254.164:8088/notas')
+                        .then(response => response.json())
+                        .then(notas => {
+                            const tbody = document.querySelector('#notas tbody');
+                            tbody.innerHTML = ''; // Limpa o conteúdo existente
+
+                            notas.forEach(nota => {
+                                const tr = document.createElement('tr');
+                                const tdAluno = document.createElement('td');
+                                const tdAtividade = document.createElement('td');
+                                const tdTurma = document.createElement('td');
+                                const tdProfessor = document.createElement('td');
+                                const tdValorTotal = document.createElement('td');
+                                const tdValorObtido = document.createElement('td');
+                                const tdAcoes = document.createElement('td'); // Nova célula para ações
+
+                                // Cria o conteúdo da linha
+                                tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
+                                tdAtividade.textContent = atividadeMap[nota.atividade_id] ? `Atividade ${nota.atividade_id}` : 'Desconhecida';
+                                tdTurma.textContent = turmaMap[nota.turma_id] || 'Desconhecida';
+                                tdProfessor.textContent = professorMap[nota.professor_id] || 'Desconhecido';
+                                tdValorTotal.textContent = nota.valor_total;
+                                tdValorObtido.textContent = nota.valor_obtido;
+
+                                // Botões de ação
+                                const btnEditar = document.createElement('a');
+                                btnEditar.textContent = 'Editar';
+                                btnEditar.href = `editar_nota.html?id=${nota.id}`; // URL para a página de edição
+                                btnEditar.className = 'button';
+                                
+                                const btnRemover = document.createElement('button');
+                                btnRemover.textContent = 'Remover';
+                                btnRemover.className = 'button';
+                                btnRemover.onclick = () => {
+                                    if (confirm('Tem certeza que deseja remover esta nota?')) {
+                                        deletarNota(nota.id);
+                                    }
+                                };
+
+                                tdAcoes.appendChild(btnEditar);
+                                tdAcoes.appendChild(btnRemover);
+
+                                tr.appendChild(tdAluno);
+                                tr.appendChild(tdAtividade);
+                                tr.appendChild(tdTurma);
+                                tr.appendChild(tdProfessor);
+                                tr.appendChild(tdValorTotal);
+                                tr.appendChild(tdValorObtido);
+                                tr.appendChild(tdAcoes); // Adiciona a célula de ações
+
+                                tbody.appendChild(tr);
+                            });
+                        })
+                        .catch(error => alert('Erro ao carregar as notas.'));
+                });
+        }
+
+        // Função para deletar uma nota
+        function deletarNota(id) {
+            fetch(`http://167.234.254.164:8088/notas/${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao deletar a nota.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    carregarNotas(); // Recarrega a lista de notas após a exclusão
+                })
+                .catch(error => alert('Erro ao deletar a nota: ' + error));
+        }
+
+        // Carrega as notas quando a página é carregada
+        window.onload = function() {
+            carregarNotas();
+        };
+    </script>
+
+</body>
+</html>

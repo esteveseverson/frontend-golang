@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Alunos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Gerenciar Alunos</h1>
+
+        <a href="adicionar_aluno.html" class="btn">Adicionar Aluno</a>
+
+        <table id="alunosTable">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Matrícula</th>
+                    <th>Turmas</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- As linhas da tabela serão preenchidas dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Função para carregar alunos e exibir na tabela
+        function carregarAlunos() {
+            fetch('http://167.234.254.164:8088/alunos')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Erro HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(alunos => {
+                    const tableBody = document.getElementById('alunosTable').getElementsByTagName('tbody')[0];
+                    tableBody.innerHTML = ''; // Limpa o corpo da tabela
+
+                    alunos.forEach(aluno => {
+                        // Buscar turmas para o aluno
+                        fetch('http://167.234.254.164:8088/turmas')
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`Erro HTTP: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(turmas => {
+                                // Mapeia turmas para nome
+                                const turmaNomes = aluno.turma_ids.map(id => {
+                                    const turma = turmas.find(t => t.id === id);
+                                    return turma ? turma.nome : 'Turma não encontrada';
+                                }).join(', ');
+
+                                // Adiciona uma linha na tabela para o aluno
+                                tableBody.innerHTML += `
+                                    <tr>
+                                        <td>${aluno.nome}</td>
+                                        <td>${aluno.matricula}</td>
+                                        <td>${turmaNomes}</td>
+                                        <td>
+                                            <a href="editar_aluno.html?id=${aluno.id}" class="btn">Editar</a>
+                                            <button onclick="deletarAluno(${aluno.id})" class="btn">Deletar</button>
+                                        </td>
+                                    </tr>
+                                `;
+                            })
+                            .catch(error => console.error('Erro ao carregar turmas:', error));
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar alunos:', error);
+                    alert('Erro ao carregar alunos. Veja o console para mais detalhes.');
+                });
+        }
+
+        // Função para deletar um aluno
+        function deletarAluno(alunoId) {
+            if (confirm('Você tem certeza que deseja excluir este aluno?')) {
+                fetch(`http://167.234.254.164:8088/alunos/${alunoId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(error => { throw new Error(error.message); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('Aluno deletado com sucesso!');
+                    window.location.reload(); // Recarrega a página para atualizar a lista
+                })
+                .catch(error => alert(`Erro ao deletar o aluno: ${error.message}`));
+            }
+        }
+
+        // Carrega os alunos quando a página é carregada
+        window.onload = carregarAlunos;
+    </script>
+
+</body>
+</html>
