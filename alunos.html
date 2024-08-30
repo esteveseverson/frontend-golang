@@ -106,7 +106,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    alert('Aluno deletado com sucesso!');
+                    alert(JSON.stringify(data));
                     window.location.reload(); // Recarrega a página para atualizar a lista
                 })
                 .catch(error => alert(`Erro ao deletar o aluno: ${error.message}`));
