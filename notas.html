@@ -286,9 +286,14 @@
             const atividadeSelect = document.getElementById('atividade');
             const valorObtidoInput = document.getElementById('valorObtido');
 
+            // Encontre o nome do aluno e da atividade manualmente na tabela
+            const linhaNota = document.querySelector(`#notas tr[data-id="${nota.id}"]`);
+            const nomeAluno = linhaNota.querySelector('td:nth-child(2)').textContent; // 2ª coluna (aluno)
+            const nomeAtividade = linhaNota.querySelector('td:nth-child(3)').textContent; // 3ª coluna (atividade)
+
             // Preenche o formulário com os dados da nota
-            alunoSelect.innerHTML = `<option>${document.querySelector(`#notas td:contains(${nota.aluno_id})`).textContent}</option>`;
-            atividadeSelect.innerHTML = `<option>${document.querySelector(`#notas td:contains(${nota.atividade_id})`).textContent}</option>`;
+            alunoSelect.innerHTML = `<option>${nomeAluno}</option>`;
+            atividadeSelect.innerHTML = `<option>${nomeAtividade}</option>`;
             valorObtidoInput.value = nota.valor_obtido;
 
             // Armazena o ID da nota globalmente para uso na atualização
