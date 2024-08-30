@@ -287,7 +287,7 @@
                     turma_id: notaGlobal.turma_id,
                     professor_id: notaGlobal.professor_id,
                     valor_total: notaGlobal.valor_total,
-                    valor_obtido: valorObtido})
+                    valor_obtido: parseFloat(valorObtido)})
             )
 
             fetch(`http://167.234.254.164:8088/notas/${notaGlobal.id}`, {
@@ -301,7 +301,7 @@
                     turma_id: notaGlobal.turma_id,
                     professor_id: notaGlobal.professor_id,
                     valor_total: notaGlobal.valor_total,
-                    valor_obtido: valorObtido
+                    valor_obtido: parseFloat(valorObtido)
                 })
             })
             .then(response => response.json())
