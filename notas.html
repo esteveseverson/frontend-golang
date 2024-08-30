@@ -1,289 +1,175 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduManage - Notas</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Notas</title>
     <style>
-        /* Estilo da tabela de notas */
-        #notas {
+        /* Estilos básicos para layout */
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        #notas td, #notas th {
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-
-        #notas th {
-            background-color: #f2f2f2;
-            text-align: left;
-        }
-
-        /* Estilo dos botões de ação */
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 0 5px;
-            font-size: 1em;
-            color: white;
-            background-color: #4CAF50;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            text-decoration: none;
-            text-align: center;
-        }
-
-        .button:hover {
-            background-color: #388E3C;
-        }
-
-        .button.add {
             margin-bottom: 20px;
         }
 
-        /* Estilo do popup */
-        .popup-overlay {
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            margin-right: 5px;
+        }
+
+        /* Estilos para o popup */
+        #popupOverlay {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            display: none;
             justify-content: center;
             align-items: center;
         }
 
-        .popup-content {
-            background-color: #fff;
+        #popup {
+            background-color: white;
             padding: 20px;
             border-radius: 5px;
-            width: 300px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 0px 10px 0px black;
         }
 
-        .popup-content label {
+        #popup input {
             display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .popup-content input,
-        .popup-content select {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .popup-content button {
             width: 100%;
             padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .popup-content button:hover {
-            background-color: #388E3C;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>EduManage</h1>
-    </header>
+    <h1>Gerenciamento de Notas</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Aluno</th>
+                <th>Atividade</th>
+                <th>Valor Obtido</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="notasTableBody">
+            <!-- As linhas das notas serão carregadas aqui -->
+        </tbody>
+    </table>
 
-    <nav>
-        <a href="index.html">Início</a>
-        <a href="professores.html">Professores</a>
-        <a href="turmas.html">Turmas</a>
-        <a href="alunos.html">Alunos</a>
-        <a href="atividades.html">Atividades</a>
-        <a href="notas.html">Notas</a>
-    </nav>
-
-    <div class="container">
-        <h1>Notas</h1>
-
-        <!-- Botão para Adicionar Notas -->
-        <a href="adicionar_notas.html" class="button add">Adicionar Nota</a>
-
-        <table id="notas">
-            <thead>
-                <tr>
-                    <th>Aluno</th>
-                    <th>Atividade</th>
-                    <th>Turma</th>
-                    <th>Professor</th>
-                    <th>Valor Total</th>
-                    <th>Valor Obtido</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Notas serão preenchidas dinamicamente aqui -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Popup para editar nota -->
-    <div class="popup-overlay" id="popupOverlay">
-        <div class="popup-content">
-            <h2>Editar Nota</h2>
+    <!-- Popup de Edição -->
+    <div id="popupOverlay">
+        <div id="popup">
             <form id="formEditarNota">
-                <label for="aluno">Aluno</label>
-                <select id="aluno" disabled></select>
-
-                <label for="atividade">Atividade</label>
-                <select id="atividade" disabled></select>
-
-                <label for="valorObtido">Nova Nota</label>
+                <label for="aluno">Aluno:</label>
+                <input type="text" id="aluno" readonly>
+                <label for="atividade">Atividade:</label>
+                <input type="text" id="atividade" readonly>
+                <label for="valorObtido">Nova Nota:</label>
                 <input type="number" id="valorObtido" required>
-
-                <button type="submit">Atualizar Nota</button>
+                <button type="submit">Salvar</button>
+                <button type="button" onclick="fecharPopup()">Cancelar</button>
             </form>
-            <button onclick="fecharPopup()">Fechar</button>
         </div>
     </div>
 
     <script>
+        let notas = [];
         let notaIdGlobal = null;
 
-        // Função para carregar turmas
-        function carregarTurmas() {
-            return fetch('http://167.234.254.164:8088/turmas')
-                .then(response => response.json())
-                .then(turmas => {
-                    const turmaMap = {};
-                    turmas.forEach(turma => {
-                        turmaMap[turma.id] = turma.nome;
-                    });
-                    return turmaMap;
-                })
-                .catch(error => alert('Erro ao carregar as turmas.'));
-        }
-
-        // Função para carregar atividades
-        function carregarAtividades() {
-            return fetch('http://167.234.254.164:8088/atividades')
-                .then(response => response.json())
-                .then(atividades => {
-                    const atividadeMap = {};
-                    atividades.forEach(atividade => {
-                        atividadeMap[atividade.id] = atividade;
-                    });
-                    return atividadeMap;
-                })
-                .catch(error => alert('Erro ao carregar as atividades.'));
-        }
-
-        // Função para carregar professores
-        function carregarProfessores() {
-            return fetch('http://167.234.254.164:8088/professores')
-                .then(response => response.json())
-                .then(professores => {
-                    const professorMap = {};
-                    professores.forEach(professor => {
-                        professorMap[professor.id] = professor.nome;
-                    });
-                    return professorMap;
-                })
-                .catch(error => alert('Erro ao carregar os professores.'));
-        }
-
-        // Função para carregar alunos
-        function carregarAlunos() {
-            return fetch('http://167.234.254.164:8088/alunos')
-                .then(response => response.json())
-                .then(alunos => {
-                    const alunoMap = {};
-                    alunos.forEach(aluno => {
-                        alunoMap[aluno.id] = aluno.nome;
-                    });
-                    return alunoMap;
-                })
-                .catch(error => alert('Erro ao carregar os alunos.'));
-        }
-
-        // Função para carregar notas
+        // Função para carregar as notas
         function carregarNotas() {
-            Promise.all([carregarTurmas(), carregarAtividades(), carregarProfessores(), carregarAlunos()])
-                .then(([turmaMap, atividadeMap, professorMap, alunoMap]) => {
-                    fetch('http://167.234.254.164:8088/notas')
-                        .then(response => response.json())
-                        .then(notas => {
-                            const tbody = document.querySelector('#notas tbody');
-                            tbody.innerHTML = ''; // Limpa o conteúdo existente
+            fetch('http://167.234.254.164:8088/notas')
+                .then(response => response.json())
+                .then(data => {
+                    notas = data; // Armazena as notas globalmente
+                    const tbody = document.getElementById('notasTableBody');
+                    tbody.innerHTML = '';
 
-                            notas.forEach(nota => {
-                                const tr = document.createElement('tr');
-                                const tdAluno = document.createElement('td');
-                                const tdAtividade = document.createElement('td');
-                                const tdTurma = document.createElement('td');
-                                const tdProfessor = document.createElement('td');
-                                const tdValorTotal = document.createElement('td');
-                                const tdValorObtido = document.createElement('td');
-                                const tdAcoes = document.createElement('td');
+                    notas.forEach(nota => {
+                        fetch(`http://167.234.254.164:8088/alunos/${nota.aluno_id}`)
+                            .then(response => response.json())
+                            .then(alunoData => {
+                                fetch(`http://167.234.254.164:8088/atividades/${nota.atividade_id}`)
+                                    .then(response => response.json())
+                                    .then(atividadeData => {
+                                        const tr = document.createElement('tr');
 
-                                // Cria o conteúdo da linha
-                                tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
-                                tdAtividade.textContent = atividadeMap[nota.atividade_id] ? atividadeMap[nota.atividade_id].nome : 'Desconhecida';
-                                tdTurma.textContent = turmaMap[nota.turma_id] || 'Desconhecida';
-                                tdProfessor.textContent = professorMap[nota.professor_id] || 'Desconhecido';
-                                tdValorTotal.textContent = nota.valor_total;
-                                tdValorObtido.textContent = nota.valor_obtido;
+                                        const tdId = document.createElement('td');
+                                        tdId.textContent = nota.id;
+                                        tr.appendChild(tdId);
 
-                                // Botões de ação
-                                const btnEditar = document.createElement('button');
-                                btnEditar.textContent = 'Editar';
-                                btnEditar.className = 'button';
-                                btnEditar.onclick = () => abrirPopup(nota);
+                                        const tdAluno = document.createElement('td');
+                                        tdAluno.textContent = alunoData.nome;
+                                        tr.appendChild(tdAluno);
 
-                                const btnRemover = document.createElement('button');
-                                btnRemover.textContent = 'Remover';
-                                btnRemover.className = 'button';
-                                btnRemover.onclick = () => {
-                                    if (confirm('Tem certeza que deseja remover esta nota?')) {
-                                        deletarNota(nota.id);
-                                    }
-                                };
+                                        const tdAtividade = document.createElement('td');
+                                        tdAtividade.textContent = atividadeData.nome;
+                                        tr.appendChild(tdAtividade);
 
-                                tdAcoes.appendChild(btnEditar);
-                                tdAcoes.appendChild(btnRemover);
+                                        const tdValorObtido = document.createElement('td');
+                                        tdValorObtido.textContent = nota.valor_obtido;
+                                        tr.appendChild(tdValorObtido);
 
-                                tr.appendChild(tdAluno);
-                                tr.appendChild(tdAtividade);
-                                tr.appendChild(tdTurma);
-                                tr.appendChild(tdProfessor);
-                                tr.appendChild(tdValorTotal);
-                                tr.appendChild(tdValorObtido);
-                                tr.appendChild(tdAcoes);
+                                        const tdAcoes = document.createElement('td');
+                                        const btnEditar = document.createElement('button');
+                                        btnEditar.textContent = 'Editar';
+                                        btnEditar.addEventListener('click', () => abrirPopup(nota));
+                                        tdAcoes.appendChild(btnEditar);
 
-                                tbody.appendChild(tr);
+                                        const btnDeletar = document.createElement('button');
+                                        btnDeletar.textContent = 'Deletar';
+                                        btnDeletar.addEventListener('click', () => deletarNota(nota.id));
+                                        tdAcoes.appendChild(btnDeletar);
+
+                                        tr.appendChild(tdAcoes);
+
+                                        tbody.appendChild(tr);
+                                    });
                             });
-                        })
-                        .catch(error => alert('Erro ao carregar as notas.'));
+                    });
                 })
-                .catch(error => alert('Erro ao carregar os dados necessários.'));
+                .catch(error => alert('Erro ao carregar as notas.'));
         }
 
         // Função para abrir o popup de edição de nota
         function abrirPopup(nota) {
             notaIdGlobal = nota.id;
 
-            document.getElementById('aluno').value = nota.aluno_id;
-            document.getElementById('atividade').value = nota.atividade_id;
+            fetch(`http://167.234.254.164:8088/alunos/${nota.aluno_id}`)
+                .then(response => response.json())
+                .then(alunoData => {
+                    document.getElementById('aluno').value = alunoData.nome;
+                });
+
+            fetch(`http://167.234.254.164:8088/atividades/${nota.atividade_id}`)
+                .then(response => response.json())
+                .then(atividadeData => {
+                    document.getElementById('atividade').value = atividadeData.nome;
+                });
+
             document.getElementById('valorObtido').value = nota.valor_obtido;
 
             document.getElementById('popupOverlay').style.display = 'flex';
@@ -300,14 +186,20 @@
         document.getElementById('formEditarNota').addEventListener('submit', function(event) {
             event.preventDefault();
 
+            const nota = notas.find(n => n.id === notaIdGlobal);
             const valorObtido = document.getElementById('valorObtido').value;
+
+            const dataAtualizada = {
+                ...nota,
+                valor_obtido: valorObtido
+            };
 
             fetch(`http://167.234.254.164:8088/notas/${notaIdGlobal}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ valor_obtido: valorObtido })
+                body: JSON.stringify(dataAtualizada)
             })
             .then(response => {
                 if (response.ok) {
