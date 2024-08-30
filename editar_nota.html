@@ -112,10 +112,10 @@
                     <option value="">Selecione uma atividade</option>
                 </select>
 
-                <button type="button" id="carregarAlunos" class="hidden">Carregar Alunos</button>
+                <button type="button" id="carregarAluno" class="hidden">Carregar Aluno</button>
             </div>
 
-            <div id="alunosContainer" class="hidden"></div>
+            <div id="alunoContainer" class="hidden"></div>
 
             <div id="message" class="message"></div>
 
@@ -171,97 +171,84 @@
                             });
 
                             document.getElementById('atividadeSection').classList.remove('hidden');
-                            document.getElementById('carregarAlunos').classList.remove('hidden');
+                            document.getElementById('carregarAluno').classList.remove('hidden');
                         })
                         .catch(error => alert('Erro ao carregar atividades: ' + error));
                 })
                 .catch(error => alert('Erro ao carregar informações da turma: ' + error));
         }
 
-        // Função para carregar os alunos da turma selecionada e preencher a nota existente
-        function carregarAlunos() {
+        // Função para carregar o aluno selecionado e preencher a nota existente
+        function carregarAluno() {
             const turmaId = document.getElementById('turma_id').value;
+            const atividadeId = document.getElementById('atividade_id').value;
+            const alunoId = prompt('Digite o ID do aluno para editar a nota:');
 
-            if (!turmaId) {
-                alert('Selecione uma turma.');
+            if (!turmaId || !atividadeId || !alunoId) {
+                alert('Preencha todos os campos ou forneça o ID do aluno.');
                 return;
             }
 
-            fetch('http://167.234.254.164:8088/alunos')
+            fetch(`http://167.234.254.164:8088/alunos/${alunoId}`)
                 .then(response => response.json())
-                .then(alunos => {
-                    const alunosFiltrados = alunos.filter(aluno => aluno.turma_ids.includes(parseInt(turmaId)));
-                    
-                    const container = document.getElementById('alunosContainer');
-                    container.innerHTML = '';
-
-                    if (alunosFiltrados.length === 0) {
-                        container.innerHTML = '<p>Nenhum aluno encontrado para a turma selecionada.</p>';
-                        return;
-                    }
-
-                    const table = document.createElement('table');
-                    table.innerHTML = `
-                        <thead>
-                            <tr>
-                                <th>Nome do Aluno</th>
-                                <th>Nota Atual</th>
-                                <th>Nova Nota</th>
-                                <th>Editar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${alunosFiltrados.map(aluno => `
+                .then(aluno => {
+                    const container = document.getElementById('alunoContainer');
+                    container.innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome do Aluno</th>
+                                    <th>Nota Atual</th>
+                                    <th>Nova Nota</th>
+                                    <th>Editar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 <tr>
                                     <td>${aluno.nome}</td>
                                     <td id="nota_atual_${aluno.id}">-</td>
                                     <td><input type="number" id="nota_${aluno.id}" min="0" max="100" required></td>
                                     <td><button type="button" class="edit-btn" onclick="editarNota(${aluno.id})">Editar</button></td>
                                 </tr>
-                            `).join('')}
-                        </tbody>
+                            </tbody>
+                        </table>
                     `;
-                    container.appendChild(table);
                     container.classList.remove('hidden');
                     document.getElementById('finalizarBtn').classList.remove('hidden');
 
-                    carregarNotasExistentes(alunosFiltrados);
+                    carregarNotaExistente(alunoId, atividadeId);
                 })
-                .catch(error => alert('Erro ao carregar os alunos: ' + error));
+                .catch(error => alert('Erro ao carregar o aluno: ' + error));
         }
 
-        // Função para carregar notas existentes para preencher os campos
-        function carregarNotasExistentes(alunos) {
-            const atividadeId = document.getElementById('atividade_id').value;
-
-            alunos.forEach(aluno => {
-                fetch(`http://167.234.254.164:8088/notas?aluno_id=${aluno.id}&atividade_id=${atividadeId}`)
-                    .then(response => response.json())
-                    .then(notas => {
-                        if (notas.length > 0) {
-                            const notaObtida = notas[0].valor_obtido;
-                            document.getElementById(`nota_atual_${aluno.id}`).textContent = notaObtida;
-                            document.getElementById(`nota_${aluno.id}`).value = notaObtida;
-                        }
-                    })
-                    .catch(error => alert('Erro ao carregar as notas: ' + error));
-            });
+        // Função para carregar a nota existente para o aluno
+        function carregarNotaExistente(alunoId, atividadeId) {
+            fetch(`http://167.234.254.164:8088/notas?aluno_id=${alunoId}&atividade_id=${atividadeId}`)
+                .then(response => response.json())
+                .then(notas => {
+                    if (notas.length > 0) {
+                        const notaObtida = notas[0].valor_obtido;
+                        document.getElementById(`nota_atual_${alunoId}`).textContent = notaObtida;
+                        document.getElementById(`nota_${alunoId}`).value = notaObtida;
+                    }
+                })
+                .catch(error => alert('Erro ao carregar a nota: ' + error));
         }
 
-        // Função para editar a nota de um aluno
+        // Função para enviar a nova nota
         function editarNota(alunoId) {
-            const novaNota = parseFloat(document.getElementById(`nota_${alunoId}`).value);
+            const novaNota = document.getElementById(`nota_${alunoId}`).value;
             const atividadeId = document.getElementById('atividade_id').value;
 
-            if (isNaN(novaNota)) {
-                alert('Por favor, insira uma nota válida.');
+            if (novaNota === '') {
+                alert('Por favor, insira a nova nota.');
                 return;
             }
 
-            const notaPayload = {
+            const data = {
                 aluno_id: alunoId,
                 atividade_id: atividadeId,
-                valor_obtido: novaNota
+                valor_obtido: parseFloat(novaNota)
             };
 
             fetch('http://167.234.254.164:8088/notas', {
@@ -269,39 +256,36 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(notaPayload)
+                body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.message) {
-                    alert(data.message);
+            .then(response => {
+                if (response.ok) {
+                    alert('Nota atualizada com sucesso!');
                     document.getElementById(`nota_atual_${alunoId}`).textContent = novaNota;
                 } else {
-                    alert('Erro ao atualizar a nota.');
+                    response.text().then(text => alert('Erro ao atualizar a nota: ' + text));
                 }
             })
-            .catch(error => alert('Erro ao editar a nota: ' + error));
+            .catch(error => alert('Erro ao enviar a nota: ' + error));
         }
 
-        // Carregar turmas ao carregar a página
-        window.onload = carregarTurmas;
-
-        // Event listeners para o carregamento de informações
-        document.getElementById('turma_id').addEventListener('change', (e) => {
-            const turmaId = e.target.value;
+        // Eventos
+        document.getElementById('turma_id').addEventListener('change', function() {
+            const turmaId = this.value;
             if (turmaId) {
                 carregarInformacoesTurma(turmaId);
             } else {
                 document.getElementById('professorSection').classList.add('hidden');
                 document.getElementById('atividadeSection').classList.add('hidden');
-                document.getElementById('carregarAlunos').classList.add('hidden');
-                document.getElementById('alunosContainer').classList.add('hidden');
-                document.getElementById('finalizarBtn').classList.add('hidden');
+                document.getElementById('carregarAluno').classList.add('hidden');
+                document.getElementById('alunoContainer').classList.add('hidden');
             }
         });
 
-        document.getElementById('carregarAlunos').addEventListener('click', carregarAlunos);
-    </script>
+        document.getElementById('carregarAluno').addEventListener('click', carregarAluno);
 
+        // Carregar as turmas ao carregar a página
+        carregarTurmas();
+    </script>
 </body>
 </html>
