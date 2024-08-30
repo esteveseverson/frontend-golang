@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - Editar Notas</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilo do formulário */
+        form {
+            margin-top: 20px;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        form select, form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            background-color: #f9f9f9;
+        }
+
+        form input:focus, form select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .message {
+            color: #d9534f;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .edit-btn {
+            padding: 5px 10px;
+            margin-left: 10px;
+            background-color: #f0ad4e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background-color: #ec971f;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>EduManage</h1>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="professores.html">Professores</a>
+        <a href="turmas.html">Turmas</a>
+        <a href="alunos.html">Alunos</a>
+        <a href="atividades.html">Atividades</a>
+        <a href="notas.html">Notas</a>
+    </nav>
+
+    <div class="container">
+        <h1>Editar Notas</h1>
+
+        <form id="editarNotasForm">
+            <div id="turmaSection">
+                <label for="turma_id">Turma:</label>
+                <select id="turma_id" name="turma_id" required>
+                    <option value="">Selecione uma turma</option>
+                </select>
+            </div>
+
+            <div id="professorSection" class="hidden">
+                <p id="professor"></p>
+            </div>
+
+            <div id="atividadeSection" class="hidden">
+                <label for="atividade_id">Atividade:</label>
+                <select id="atividade_id" name="atividade_id" required>
+                    <option value="">Selecione uma atividade</option>
+                </select>
+
+                <button type="button" id="carregarAlunos" class="hidden">Carregar Alunos</button>
+            </div>
+
+            <div id="alunosContainer" class="hidden"></div>
+
+            <div id="message" class="message"></div>
+
+            <button type="button" id="finalizarBtn" class="hidden">Finalizar Edição</button>
+        </form>
+    </div>
+
+    <script>
+        // Função para carregar as turmas e preencher o select
+        function carregarTurmas() {
+            fetch('http://167.234.254.164:8088/turmas')
+                .then(response => response.json())
+                .then(turmas => {
+                    const select = document.getElementById('turma_id');
+                    select.innerHTML = '<option value="">Selecione uma turma</option>';
+
+                    turmas.forEach(turma => {
+                        select.innerHTML += `<option value="${turma.id}">${turma.nome}</option>`;
+                    });
+                })
+                .catch(error => alert('Erro ao carregar as turmas: ' + error));
+        }
+
+        // Função para carregar o professor e atividades da turma selecionada
+        function carregarInformacoesTurma(turmaId) {
+            fetch(`http://167.234.254.164:8088/turmas/${turmaId}`)
+                .then(response => response.json())
+                .then(turma => {
+                    fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
+                        .then(response => response.json())
+                        .then(professor => {
+                            const professorP = document.getElementById('professor');
+                            if (professor && professor.nome) {
+                                professorP.textContent = `Professor: ${professor.nome}`;
+                                document.getElementById('professorSection').classList.remove('hidden');
+                            } else {
+                                professorP.textContent = 'Professor não disponível';
+                                document.getElementById('professorSection').classList.remove('hidden');
+                            }
+                        })
+                        .catch(error => alert('Erro ao carregar o professor: ' + error));
+
+                    fetch('http://167.234.254.164:8088/atividades')
+                        .then(response => response.json())
+                        .then(atividades => {
+                            const select = document.getElementById('atividade_id');
+                            select.innerHTML = '<option value="">Selecione uma atividade</option>';
+
+                            atividades.forEach(atividade => {
+                                if (atividade.turma_id === parseInt(turmaId)) {
+                                    select.innerHTML += `<option value="${atividade.id}" data-valor="${atividade.valor}">Atividade ${atividade.id} - Valor ${atividade.valor}</option>`;
+                                }
+                            });
+
+                            document.getElementById('atividadeSection').classList.remove('hidden');
+                            document.getElementById('carregarAlunos').classList.remove('hidden');
+                        })
+                        .catch(error => alert('Erro ao carregar atividades: ' + error));
+                })
+                .catch(error => alert('Erro ao carregar informações da turma: ' + error));
+        }
+
+        // Função para carregar os alunos da turma selecionada e preencher a nota existente
+        function carregarAlunos() {
+            const turmaId = document.getElementById('turma_id').value;
+
+            if (!turmaId) {
+                alert('Selecione uma turma.');
+                return;
+            }
+
+            fetch('http://167.234.254.164:8088/alunos')
+                .then(response => response.json())
+                .then(alunos => {
+                    const alunosFiltrados = alunos.filter(aluno => aluno.turma_ids.includes(parseInt(turmaId)));
+                    
+                    const container = document.getElementById('alunosContainer');
+                    container.innerHTML = '';
+
+                    if (alunosFiltrados.length === 0) {
+                        container.innerHTML = '<p>Nenhum aluno encontrado para a turma selecionada.</p>';
+                        return;
+                    }
+
+                    const table = document.createElement('table');
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>Nome do Aluno</th>
+                                <th>Nota Atual</th>
+                                <th>Nova Nota</th>
+                                <th>Editar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${alunosFiltrados.map(aluno => `
+                                <tr>
+                                    <td>${aluno.nome}</td>
+                                    <td id="nota_atual_${aluno.id}">-</td>
+                                    <td><input type="number" id="nota_${aluno.id}" min="0" max="100" required></td>
+                                    <td><button type="button" class="edit-btn" onclick="editarNota(${aluno.id})">Editar</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    `;
+                    container.appendChild(table);
+                    container.classList.remove('hidden');
+                    document.getElementById('finalizarBtn').classList.remove('hidden');
+
+                    carregarNotasExistentes(alunosFiltrados);
+                })
+                .catch(error => alert('Erro ao carregar os alunos: ' + error));
+        }
+
+        // Função para carregar notas existentes para preencher os campos
+        function carregarNotasExistentes(alunos) {
+            const atividadeId = document.getElementById('atividade_id').value;
+
+            alunos.forEach(aluno => {
+                fetch(`http://167.234.254.164:8088/notas?aluno_id=${aluno.id}&atividade_id=${atividadeId}`)
+                    .then(response => response.json())
+                    .then(notas => {
+                        if (notas.length > 0) {
+                            const notaObtida = notas[0].valor_obtido;
+                            document.getElementById(`nota_atual_${aluno.id}`).textContent = notaObtida;
+                            document.getElementById(`nota_${aluno.id}`).value = notaObtida;
+                        }
+                    })
+                    .catch(error => alert('Erro ao carregar as notas: ' + error));
+            });
+        }
+
+        // Função para editar a nota de um aluno
+        function editarNota(alunoId) {
+            const novaNota = parseFloat(document.getElementById(`nota_${alunoId}`).value);
+            const atividadeId = document.getElementById('atividade_id').value;
+
+            if (isNaN(novaNota)) {
+                alert('Por favor, insira uma nota válida.');
+                return;
+            }
+
+            const notaPayload = {
+                aluno_id: alunoId,
+                atividade_id: atividadeId,
+                valor_obtido: novaNota
+            };
+
+            fetch('http://167.234.254.164:8088/notas', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(notaPayload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.message) {
+                    alert(data.message);
+                    document.getElementById(`nota_atual_${alunoId}`).textContent = novaNota;
+                } else {
+                    alert('Erro ao atualizar a nota.');
+                }
+            })
+            .catch(error => alert('Erro ao editar a nota: ' + error));
+        }
+
+        // Carregar turmas ao carregar a página
+        window.onload = carregarTurmas;
+
+        // Event listeners para o carregamento de informações
+        document.getElementById('turma_id').addEventListener('change', (e) => {
+            const turmaId = e.target.value;
+            if (turmaId) {
+                carregarInformacoesTurma(turmaId);
+            } else {
+                document.getElementById('professorSection').classList.add('hidden');
+                document.getElementById('atividadeSection').classList.add('hidden');
+                document.getElementById('carregarAlunos').classList.add('hidden');
+                document.getElementById('alunosContainer').classList.add('hidden');
+                document.getElementById('finalizarBtn').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('carregarAlunos').addEventListener('click', carregarAlunos);
+    </script>
+
+</body>
+</html>
