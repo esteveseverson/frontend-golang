@@ -284,12 +284,11 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    aluno_id: notaGlobal.aluno_id,
                     atividade_id: notaGlobal.atividade_id,
                     turma_id: notaGlobal.turma_id,
                     professor_id: notaGlobal.professor_id,
                     valor_total: notaGlobal.valor_total,
-                    valor_obtido: valorObtido
+                    valor_obtido: valorObtidoInput
                 })
             })
             .then(response => response.json())
