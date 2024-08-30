@@ -159,127 +159,98 @@
 
     <script>
         let notaGlobal = {};
+        let alunoMap = {};
+        let atividadeMap = {};
+        let turmaMap = {};
+        let professorMap = {};
 
-        // Função para carregar turmas
-        function carregarTurmas() {
-            return fetch('http://167.234.254.164:8088/turmas')
-                .then(response => response.json())
-                .then(turmas => {
-                    const turmaMap = {};
+        // Função para carregar dados
+        function carregarDados() {
+            return Promise.all([
+                fetch('http://167.234.254.164:8088/turmas').then(response => response.json()).then(turmas => {
                     turmas.forEach(turma => {
                         turmaMap[turma.id] = turma.nome;
                     });
-                    return turmaMap;
-                })
-                .catch(error => alert('Erro ao carregar as turmas.'));
-        }
-
-        // Função para carregar atividades
-        function carregarAtividades() {
-            return fetch('http://167.234.254.164:8088/atividades')
-                .then(response => response.json())
-                .then(atividades => {
-                    const atividadeMap = {};
+                }),
+                fetch('http://167.234.254.164:8088/atividades').then(response => response.json()).then(atividades => {
                     atividades.forEach(atividade => {
                         atividadeMap[atividade.id] = atividade;
                     });
-                    return atividadeMap;
-                })
-                .catch(error => alert('Erro ao carregar as atividades.'));
-        }
-
-        // Função para carregar professores
-        function carregarProfessores() {
-            return fetch('http://167.234.254.164:8088/professores')
-                .then(response => response.json())
-                .then(professores => {
-                    const professorMap = {};
+                }),
+                fetch('http://167.234.254.164:8088/professores').then(response => response.json()).then(professores => {
                     professores.forEach(professor => {
                         professorMap[professor.id] = professor.nome;
                     });
-                    return professorMap;
-                })
-                .catch(error => alert('Erro ao carregar os professores.'));
-        }
-
-        // Função para carregar alunos
-        function carregarAlunos() {
-            return fetch('http://167.234.254.164:8088/alunos')
-                .then(response => response.json())
-                .then(alunos => {
-                    const alunoMap = {};
+                }),
+                fetch('http://167.234.254.164:8088/alunos').then(response => response.json()).then(alunos => {
                     alunos.forEach(aluno => {
                         alunoMap[aluno.id] = aluno.nome;
                     });
-                    return alunoMap;
                 })
-                .catch(error => alert('Erro ao carregar os alunos.'));
+            ])
+            .catch(error => alert('Erro ao carregar os dados.'));
         }
 
         // Função para carregar notas
         function carregarNotas() {
-            Promise.all([carregarTurmas(), carregarAtividades(), carregarProfessores(), carregarAlunos()])
-                .then(([turmaMap, atividadeMap, professorMap, alunoMap]) => {
-                    fetch('http://167.234.254.164:8088/notas')
-                        .then(response => response.json())
-                        .then(notas => {
-                            const tbody = document.querySelector('#notas tbody');
-                            tbody.innerHTML = ''; // Limpa o conteúdo existente
+            fetch('http://167.234.254.164:8088/notas')
+                .then(response => response.json())
+                .then(notas => {
+                    const tbody = document.querySelector('#notas tbody');
+                    tbody.innerHTML = ''; // Limpa o conteúdo existente
 
-                            notas.forEach(nota => {
-                                const tr = document.createElement('tr');
-                                const tdAluno = document.createElement('td');
-                                const tdAtividade = document.createElement('td');
-                                const tdTurma = document.createElement('td');
-                                const tdProfessor = document.createElement('td');
-                                const tdValorTotal = document.createElement('td');
-                                const tdValorObtido = document.createElement('td');
-                                const tdAcoes = document.createElement('td');
+                    notas.forEach(nota => {
+                        const tr = document.createElement('tr');
+                        const tdAluno = document.createElement('td');
+                        const tdAtividade = document.createElement('td');
+                        const tdTurma = document.createElement('td');
+                        const tdProfessor = document.createElement('td');
+                        const tdValorTotal = document.createElement('td');
+                        const tdValorObtido = document.createElement('td');
+                        const tdAcoes = document.createElement('td');
 
-                                // Cria o conteúdo da linha
-                                tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
-                                tdAtividade.textContent = atividadeMap[nota.atividade_id] ? atividadeMap[nota.atividade_id].nome : 'Desconhecida';
-                                tdTurma.textContent = turmaMap[nota.turma_id] || 'Desconhecida';
-                                tdProfessor.textContent = professorMap[nota.professor_id] || 'Desconhecido';
-                                tdValorTotal.textContent = nota.valor_total;
-                                tdValorObtido.textContent = nota.valor_obtido;
+                        // Cria o conteúdo da linha
+                        tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
+                        tdAtividade.textContent = atividadeMap[nota.atividade_id] ? atividadeMap[nota.atividade_id].nome : 'Desconhecida';
+                        tdTurma.textContent = turmaMap[nota.turma_id] || 'Desconhecida';
+                        tdProfessor.textContent = professorMap[nota.professor_id] || 'Desconhecido';
+                        tdValorTotal.textContent = nota.valor_total;
+                        tdValorObtido.textContent = nota.valor_obtido;
 
-                                // Botões de ação
-                                const btnEditar = document.createElement('button');
-                                btnEditar.textContent = 'Editar';
-                                btnEditar.className = 'button';
-                                btnEditar.onclick = () => abrirPopup(nota, alunoMap, atividadeMap);
+                        // Botões de ação
+                        const btnEditar = document.createElement('button');
+                        btnEditar.textContent = 'Editar';
+                        btnEditar.className = 'button';
+                        btnEditar.onclick = () => abrirPopup(nota);
 
-                                const btnRemover = document.createElement('button');
-                                btnRemover.textContent = 'Remover';
-                                btnRemover.className = 'button';
-                                btnRemover.onclick = () => {
-                                    if (confirm('Tem certeza que deseja remover esta nota?')) {
-                                        deletarNota(nota.id);
-                                    }
-                                };
+                        const btnRemover = document.createElement('button');
+                        btnRemover.textContent = 'Remover';
+                        btnRemover.className = 'button';
+                        btnRemover.onclick = () => {
+                            if (confirm('Tem certeza que deseja remover esta nota?')) {
+                                deletarNota(nota.id);
+                            }
+                        };
 
-                                tdAcoes.appendChild(btnEditar);
-                                tdAcoes.appendChild(btnRemover);
+                        tdAcoes.appendChild(btnEditar);
+                        tdAcoes.appendChild(btnRemover);
 
-                                tr.appendChild(tdAluno);
-                                tr.appendChild(tdAtividade);
-                                tr.appendChild(tdTurma);
-                                tr.appendChild(tdProfessor);
-                                tr.appendChild(tdValorTotal);
-                                tr.appendChild(tdValorObtido);
-                                tr.appendChild(tdAcoes);
+                        tr.appendChild(tdAluno);
+                        tr.appendChild(tdAtividade);
+                        tr.appendChild(tdTurma);
+                        tr.appendChild(tdProfessor);
+                        tr.appendChild(tdValorTotal);
+                        tr.appendChild(tdValorObtido);
+                        tr.appendChild(tdAcoes);
 
-                                tbody.appendChild(tr);
-                            });
-                        })
-                        .catch(error => alert('Erro ao carregar as notas.'));
+                        tbody.appendChild(tr);
+                    });
                 })
-                .catch(error => alert('Erro ao carregar os dados.'));
+                .catch(error => alert('Erro ao carregar as notas.'));
         }
 
         // Função para abrir o popup
-        function abrirPopup(nota, alunoMap, atividadeMap) {
+        function abrirPopup(nota) {
             notaGlobal = nota;
             const popupOverlay = document.getElementById('popupOverlay');
             const formEditarNota = document.getElementById('formEditarNota');
@@ -290,68 +261,61 @@
             // Preenche as opções de aluno e atividade
             alunoSelect.innerHTML = `<option value="${nota.aluno_id}">${alunoMap[nota.aluno_id]}</option>`;
             atividadeSelect.innerHTML = `<option value="${nota.atividade_id}">${atividadeMap[nota.atividade_id].nome}</option>`;
+
             valorObtidoInput.value = nota.valor_obtido;
 
             popupOverlay.style.display = 'flex';
-
-            // Adiciona o evento de submit ao formulário
-            formEditarNota.onsubmit = (event) => {
-                event.preventDefault();
-                editarNota(notaGlobal.id);
-            };
         }
 
         // Função para fechar o popup
         function fecharPopup() {
-            const popupOverlay = document.getElementById('popupOverlay');
-            popupOverlay.style.display = 'none';
+            document.getElementById('popupOverlay').style.display = 'none';
         }
 
-        // Função para editar nota
-        function editarNota(notaId) {
+        // Função para atualizar a nota
+        document.getElementById('formEditarNota').onsubmit = function(event) {
+            event.preventDefault();
+
             const valorObtido = document.getElementById('valorObtido').value;
 
-            const notaAtualizada = {
-                valor_obtido: parseFloat(valorObtido)
-            };
-
-            fetch(`http://167.234.254.164:8088/notas/${notaId}`, {
+            fetch(`http://167.234.254.164:8088/notas/${notaGlobal.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(notaAtualizada) // Remover o ID do corpo
+                body: JSON.stringify({
+                    aluno_id: notaGlobal.aluno_id,
+                    atividade_id: notaGlobal.atividade_id,
+                    turma_id: notaGlobal.turma_id,
+                    professor_id: notaGlobal.professor_id,
+                    valor_total: notaGlobal.valor_total,
+                    valor_obtido: valorObtido
+                })
             })
-            .then(response => {
-                if (response.ok) {
-                    alert('Nota atualizada com sucesso!');
-                    fecharPopup();
-                    carregarNotas(); // Recarrega a tabela de notas
-                } else {
-                    alert('Erro ao atualizar a nota.');
-                }
+            .then(response => response.json())
+            .then(() => {
+                fecharPopup();
+                carregarNotas();
             })
             .catch(error => alert('Erro ao atualizar a nota.'));
         }
 
-        // Função para deletar nota
-        function deletarNota(notaId) {
-            fetch(`http://167.234.254.164:8088/notas/${notaId}`, {
+        // Função para deletar a nota
+        function deletarNota(id) {
+            fetch(`http://167.234.254.164:8088/notas/${id}`, {
                 method: 'DELETE'
             })
-            .then(response => {
-                if (response.ok) {
-                    alert('Nota removida com sucesso!');
-                    carregarNotas(); // Recarrega a tabela de notas
-                } else {
-                    alert('Erro ao remover a nota.');
-                }
-            })
+            .then(() => carregarNotas())
             .catch(error => alert('Erro ao remover a nota.'));
         }
 
-        // Carrega as notas ao iniciar a página
-        carregarNotas();
+        // Inicializa a página
+        window.onload = function() {
+            carregarDados().then(() => {
+                carregarNotas();
+            });
+        }
     </script>
+
 </body>
 </html>
