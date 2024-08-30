@@ -81,6 +81,7 @@
             <thead>
                 <tr>
                     <th>Turma</th>
+                    <th>Atividade</th>
                     <th>Valor</th>
                     <th>Data de Entrega</th>
                     <th>Ações</th>
@@ -107,6 +108,21 @@
                 .catch(error => alert('Erro ao carregar as turmas.'));
         }
 
+        // Função para deletar atividade
+        function deletarAtividade(id) {
+            if (confirm('Tem certeza que deseja deletar esta atividade?')) {
+                fetch(`http://167.234.254.164:8088/atividades/${id}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(JSON.stringify(data));
+                    carregarAtividades(); // Recarrega a tabela após deletar
+                })
+                .catch(error => alert('Erro ao deletar a atividade.'));
+            }
+        }
+
         // Função para carregar as atividades
         function carregarAtividades() {
             carregarTurmas().then(turmaMap => {
@@ -119,12 +135,14 @@
                         atividades.forEach(atividade => {
                             const tr = document.createElement('tr');
                             const tdTurma = document.createElement('td');
+                            const tdNome = document.createElement('td');
                             const tdValor = document.createElement('td');
                             const tdDataEntrega = document.createElement('td');
                             const tdAcoes = document.createElement('td');
                             
                             // Cria o conteúdo da linha
                             tdTurma.textContent = turmaMap[atividade.turma_id] || 'Desconhecida';
+                            tdNome.textContent = atividade.nome;
                             tdValor.textContent = atividade.valor;
                             tdDataEntrega.textContent = atividade.data_entrega;
 
@@ -139,28 +157,14 @@
                             excluirBtn.textContent = 'Excluir';
                             excluirBtn.classList.add('button', 'delete');
                             excluirBtn.onclick = function() {
-                                if (confirm('Tem certeza que deseja excluir esta atividade?')) {
-                                    fetch(`http://167.234.254.164:8088/atividades/${atividade.id}`, {
-                                        method: 'DELETE'
-                                    })
-                                    .then(response => {
-                                        if (!response.ok) {
-                                            return response.json().then(error => { throw new Error(error.message); });
-                                        }
-                                        return response.json();
-                                    })
-                                    .then(() => {
-                                        alert('Atividade excluída com sucesso!');
-                                        carregarAtividades(); // Recarrega a lista de atividades
-                                    })
-                                    .catch(error => alert(`Erro ao excluir a atividade: ${error.message}`));
-                                }
+                                deletarAtividade(atividade.id);
                             };
 
                             tdAcoes.appendChild(editarBtn);
                             tdAcoes.appendChild(excluirBtn);
 
                             tr.appendChild(tdTurma);
+                            tr.appendChild(tdNome);
                             tr.appendChild(tdValor);
                             tr.appendChild(tdDataEntrega);
                             tr.appendChild(tdAcoes);
