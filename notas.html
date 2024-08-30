@@ -258,6 +258,8 @@
             const atividadeSelect = document.getElementById('atividade');
             const valorObtidoInput = document.getElementById('valorObtido');
 
+            console.log(valorObtidoInput)
+            
             // Preenche as opções de aluno e atividade
             alunoSelect.innerHTML = `<option value="${nota.aluno_id}">${alunoMap[nota.aluno_id]}</option>`;
             atividadeSelect.innerHTML = `<option value="${nota.atividade_id}">${atividadeMap[nota.atividade_id].nome}</option>`;
@@ -277,6 +279,16 @@
             event.preventDefault();
 
             const valorObtido = document.getElementById('valorObtido').value;
+
+            console.log(
+                JSON.stringify({
+                    aluno_id: notaGlobal.aluno_id,
+                    atividade_id: notaGlobal.atividade_id,
+                    turma_id: notaGlobal.turma_id,
+                    professor_id: notaGlobal.professor_id,
+                    valor_total: notaGlobal.valor_total,
+                    valor_obtido: valorObtido})
+            )
 
             fetch(`http://167.234.254.164:8088/notas/${notaGlobal.id}`, {
                 method: 'PUT',
