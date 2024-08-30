@@ -93,23 +93,18 @@
                 });
         }
 
-        // Função para deletar um aluno
         function deletarAluno(alunoId) {
-            if (confirm('Você tem certeza que deseja excluir este aluno?')) {
+            if (confirm('Tem certeza que deseja deletar este aluno?')) {
                 fetch(`http://167.234.254.164:8088/alunos/${alunoId}`, {
-                    method: 'DELETE'
+                    //fetch(`http://localhost:8088/alunos/${alunoId}`, {
+                    method: 'DELETE',
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(error => { throw new Error(error.message); });
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     alert(JSON.stringify(data));
-                    window.location.reload(); // Recarrega a página para atualizar a lista
+                    carregarAlunos(); // Recarrega a tabela após deletar
                 })
-                .catch(error => alert(`Erro ao deletar o aluno: ${error.message}`));
+                .catch(error => alert('Erro ao deletar o aluno.'));
             }
         }
 
