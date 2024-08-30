@@ -30,7 +30,7 @@
             margin: 0 5px;
             font-size: 1em;
             color: white;
-            background-color: #4CAF50; /* Cor verde para ambos os botões */
+            background-color: #4CAF50;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -40,11 +40,11 @@
         }
 
         .button:hover {
-            background-color: #388E3C; /* Cor verde mais escura ao passar o mouse */
+            background-color: #388E3C;
         }
 
         .button.add {
-            margin-bottom: 20px; /* Espaço abaixo do botão */
+            margin-bottom: 20px;
         }
 
         /* Estilo do popup */
@@ -128,7 +128,7 @@
                     <th>Professor</th>
                     <th>Valor Total</th>
                     <th>Valor Obtido</th>
-                    <th>Ações</th> <!-- Nova coluna para ações -->
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -234,7 +234,7 @@
                                 const tdProfessor = document.createElement('td');
                                 const tdValorTotal = document.createElement('td');
                                 const tdValorObtido = document.createElement('td');
-                                const tdAcoes = document.createElement('td'); // Nova célula para ações
+                                const tdAcoes = document.createElement('td');
 
                                 // Cria o conteúdo da linha
                                 tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
@@ -275,88 +275,69 @@
                         })
                         .catch(error => alert('Erro ao carregar as notas.'));
                 })
-                .catch(error => alert('Erro ao carregar os dados.'));
+                .catch(error => alert('Erro ao carregar os dados necessários.'));
         }
 
-        // Função para abrir o popup de edição
+        // Função para abrir o popup de edição de nota
         function abrirPopup(nota) {
-            const popupOverlay = document.getElementById('popupOverlay');
-            const formEditarNota = document.getElementById('formEditarNota');
-            const alunoSelect = document.getElementById('aluno');
-            const atividadeSelect = document.getElementById('atividade');
-            const valorObtidoInput = document.getElementById('valorObtido');
-
-            // Encontre o nome do aluno e da atividade manualmente na tabela
-            const linhaNota = document.querySelector(`#notas tr[data-id="${nota.id}"]`);
-            const nomeAluno = linhaNota.querySelector('td:nth-child(2)').textContent; // 2ª coluna (aluno)
-            const nomeAtividade = linhaNota.querySelector('td:nth-child(3)').textContent; // 3ª coluna (atividade)
-
-            // Preenche o formulário com os dados da nota
-            alunoSelect.innerHTML = `<option>${nomeAluno}</option>`;
-            atividadeSelect.innerHTML = `<option>${nomeAtividade}</option>`;
-            valorObtidoInput.value = nota.valor_obtido;
-
-            // Armazena o ID da nota globalmente para uso na atualização
             notaIdGlobal = nota.id;
 
-            popupOverlay.style.display = 'flex';
+            document.getElementById('aluno').value = nota.aluno_id;
+            document.getElementById('atividade').value = nota.atividade_id;
+            document.getElementById('valorObtido').value = nota.valor_obtido;
 
-            // Lidar com a submissão do formulário
-            formEditarNota.onsubmit = (event) => {
-                event.preventDefault();
-                atualizarNota(notaIdGlobal);
-            };
+            document.getElementById('popupOverlay').style.display = 'flex';
         }
 
         // Função para fechar o popup
         function fecharPopup() {
-            const popupOverlay = document.getElementById('popupOverlay');
-            popupOverlay.style.display = 'none';
+            notaIdGlobal = null;
+            document.getElementById('formEditarNota').reset();
+            document.getElementById('popupOverlay').style.display = 'none';
         }
 
         // Função para atualizar a nota
-        function atualizarNota(id) {
+        document.getElementById('formEditarNota').addEventListener('submit', function(event) {
+            event.preventDefault();
+
             const valorObtido = document.getElementById('valorObtido').value;
 
-            fetch(`http://167.234.254.164:8088/notas/${id}`, {
+            fetch(`http://167.234.254.164:8088/notas/${notaIdGlobal}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    valor_obtido: valorObtido
-                })
+                body: JSON.stringify({ valor_obtido: valorObtido })
             })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Nota atualizada com sucesso!');
-                        fecharPopup();
-                        carregarNotas();
-                    } else {
-                        alert('Erro ao atualizar a nota.');
-                    }
-                })
-                .catch(error => alert('Erro ao atualizar a nota.'));
-        }
+            .then(response => {
+                if (response.ok) {
+                    fecharPopup();
+                    carregarNotas();
+                } else {
+                    alert('Erro ao atualizar a nota.');
+                }
+            })
+            .catch(error => alert('Erro ao enviar a atualização da nota.'));
+        });
 
-        // Função para deletar uma nota
+        // Função para deletar a nota
         function deletarNota(id) {
             fetch(`http://167.234.254.164:8088/notas/${id}`, {
                 method: 'DELETE'
             })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Nota removida com sucesso!');
-                        carregarNotas();
-                    } else {
-                        alert('Erro ao remover a nota.');
-                    }
-                })
-                .catch(error => alert('Erro ao remover a nota.'));
+            .then(response => {
+                if (response.ok) {
+                    carregarNotas();
+                } else {
+                    alert('Erro ao deletar a nota.');
+                }
+            })
+            .catch(error => alert('Erro ao enviar a solicitação de exclusão da nota.'));
         }
 
-        // Carrega as notas ao carregar a página
+        // Carregar as notas ao carregar a página
         window.onload = carregarNotas;
     </script>
+
 </body>
 </html>
