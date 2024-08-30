@@ -78,7 +78,7 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    alert('Professor deletado com sucesso!');
+                    alert(JSON.stringify(data);
                     carregarProfessores(); // Recarrega a tabela após deletar
                 })
                 .catch(error => alert('Erro ao deletar o professor.'));
