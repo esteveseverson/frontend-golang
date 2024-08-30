@@ -96,7 +96,7 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    alert('Turma deletada com sucesso!');
+                    alert(JSON.stringify(data));
                     carregarTurmas(); // Recarrega a tabela após deletar
                 })
                 .catch(error => alert('Erro ao deletar a turma.'));
