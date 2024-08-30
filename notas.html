@@ -109,7 +109,7 @@
                 .then(atividades => {
                     const atividadeMap = {};
                     atividades.forEach(atividade => {
-                        atividadeMap[atividade.id] = atividade;
+                        atividadeMap[atividade.nota] = atividade;
                     });
                     return atividadeMap;
                 })
@@ -162,11 +162,11 @@
                                 const tdProfessor = document.createElement('td');
                                 const tdValorTotal = document.createElement('td');
                                 const tdValorObtido = document.createElement('td');
-                                const tdAcoes = document.createElement('td'); // Nova célula para ações
+                                const tdAcoes = document.createElement('td'); 
 
                                 // Cria o conteúdo da linha
                                 tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
-                                tdAtividade.textContent = atividadeMap[nota.atividade_id] ? `Atividade ${nota.atividade_id}` : 'Desconhecida';
+                                tdAtividade.textContent = atividadeMap[nota.atividade_id] ? `${nota.atividade_id}` : 'Desconhecida';
                                 tdTurma.textContent = turmaMap[nota.turma_id] || 'Desconhecida';
                                 tdProfessor.textContent = professorMap[nota.professor_id] || 'Desconhecido';
                                 tdValorTotal.textContent = nota.valor_total;
