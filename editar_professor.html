@@ -71,7 +71,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert('Professor atualizado com sucesso!');
+                alert(JSON.stringify(data));
                 window.location.href = 'professores.html';
             })
             .catch(error => alert('Erro ao atualizar o professor.'));

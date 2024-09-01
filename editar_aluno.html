@@ -159,7 +159,7 @@
                 return response.json();
             })
             .then(data => {
-                alert('Aluno atualizado com sucesso!');
+                alert(JSON.stringify(data));
                 window.location.href = 'alunos.html'; // Redireciona para a página de alunos
             })
             .catch(error => alert(`Erro ao atualizar o aluno: ${error.message}`));

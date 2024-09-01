@@ -96,7 +96,7 @@
                 return response.json();
             })
             .then(data => {
-                alert('Turma adicionada com sucesso!');
+                alert(JSON.stringify(data));
                 window.location.href = 'turmas.html'; // Redireciona para a página de turmas
             })
             .catch(error => alert(`Erro ao adicionar a turma: ${error.message}`));

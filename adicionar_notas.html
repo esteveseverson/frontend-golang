@@ -210,7 +210,6 @@
                             <tr>
                                 <th>Nome do Aluno</th>
                                 <th>Nota</th>
-                                <th>Check</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -218,7 +217,6 @@
                                 <tr>
                                     <td>${aluno.nome}</td>
                                     <td><input type="number" id="nota_${aluno.id}" min="0" max="100" required></td>
-                                    <td><button type="button" class="check-btn" onclick="enviarNota(${aluno.id})">Check</button></td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -230,63 +228,63 @@
                 .catch(error => alert('Erro ao carregar os alunos: ' + error));
         }
 
-        // Função para enviar a nota de um aluno
-        function enviarNota(alunoId) {
-            const notaInput = document.getElementById(`nota_${alunoId}`);
-            const notaObtida = parseFloat(notaInput.value);
-
+        // Função para enviar as notas de todos os alunos preenchidos
+        function finalizarNotas() {
             const turmaId = document.getElementById('turma_id').value;
             const atividadeId = document.getElementById('atividade_id').value;
             const professorId = document.getElementById('turma_id').value; // Usa o ID da turma para obter o ID do professor
-            const valorTotal = parseFloat(document.querySelector(`#atividade_id option[value="${atividadeId}"]`).dataset.valor);
 
-            console.log(valorTotal)
+            const inputs = document.querySelectorAll('[id^="nota_"]');
 
-            const notaObj = {
-                aluno_id: parseInt(alunoId),
-                atividade_id: parseInt(atividadeId),
-                turma_id: parseInt(turmaId),
-                professor_id: parseInt(professorId),
-                valor_obtido: notaObtida
-            };
+            inputs.forEach(input => {
+                const alunoId = input.id.split('_')[1];
+                const notaObtida = parseFloat(input.value);
 
-            fetch('http://167.234.254.164:8088/notas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(notaObj)
-            })
+                if (isNaN(notaObtida)) {
+                    alert(`Nota inválida para o aluno ID ${alunoId}`);
+                    return;
+                }
+
+                const notaObj = {
+                    aluno_id: parseInt(alunoId),
+                    atividade_id: parseInt(atividadeId),
+                    turma_id: parseInt(turmaId),
+                    professor_id: parseInt(professorId),
+                    valor_obtido: notaObtida
+                };
+
+                // Enviar nota para cada aluno
+                fetch('http://167.234.254.164:8088/notas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(notaObj)
+                })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Erro ao adicionar a nota.');
+                        throw new Error('Erro ao enviar a nota.');
                     }
-                    return response.json();
                 })
-                .then(data => {
-                    document.getElementById('message').textContent = 'Nota adicionada com sucesso.';
-                })
-                .catch(error => alert('Erro ao adicionar a nota: ' + error));
+                .catch(error => alert(`Erro ao enviar a nota para o aluno ID ${alunoId}: ` + error));
+            });
+
+            alert('Notas enviadas com sucesso.');
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            carregarTurmas();
-
-            document.getElementById('turma_id').addEventListener('change', (event) => {
-                const turmaId = event.target.value;
-                if (turmaId) {
-                    carregarInformacoesTurma(turmaId);
-                }
-            });
-
-            document.getElementById('carregarAlunos').addEventListener('click', () => {
-                carregarAlunos();
-            });
-
-            document.getElementById('finalizarBtn').addEventListener('click', () => {
-                alert('Notas enviadas com sucesso!');
-            });
+        // Adiciona eventos aos elementos
+        document.getElementById('turma_id').addEventListener('change', function() {
+            const turmaId = this.value;
+            if (turmaId) {
+                carregarInformacoesTurma(turmaId);
+            }
         });
+
+        document.getElementById('carregarAlunos').addEventListener('click', carregarAlunos);
+        document.getElementById('finalizarBtn').addEventListener('click', finalizarNotas);
+
+        // Carregar as turmas no carregamento da página
+        window.onload = carregarTurmas;
     </script>
 </body>
 </html>

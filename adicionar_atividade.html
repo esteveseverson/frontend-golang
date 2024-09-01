@@ -120,7 +120,7 @@
                 if (data.error) {
                     throw new Error(data.error);
                 }
-                alert('Atividade adicionada com sucesso!');
+                alert(JSON.stringify(data));
                 window.location.href = 'atividades.html'; // Redireciona para a página de atividades
             })
             .catch(error => {

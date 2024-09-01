@@ -130,7 +130,7 @@
                 return response.json();
             })
             .then(data => {
-                alert('Aluno adicionado com sucesso!');
+                alert(JSON.stringify(data));
                 window.location.href = 'alunos.html'; // Redireciona para a página de alunos
             })
             .catch(error => alert(`Erro ao adicionar o aluno: ${error.message}`));
