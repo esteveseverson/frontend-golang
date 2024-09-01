@@ -60,6 +60,9 @@
         <form id="editarAtividadeForm">
             <input type="hidden" id="atividade_id" name="atividade_id">
 
+            <label for="nome">Nome da Atividade:</label>
+            <input type="text" id="nome" name="nome" required>
+
             <label for="turma_id">Turma:</label>
             <select id="turma_id" name="turma_id" required>
                 <!-- Opções serão preenchidas dinamicamente -->
@@ -99,6 +102,7 @@
                 .then(response => response.json())
                 .then(atividade => {
                     document.getElementById('atividade_id').value = atividade.id;
+                    document.getElementById('nome').value = atividade.nome;  // Preenche o nome da atividade
                     document.getElementById('turma_id').value = atividade.turma_id;
                     document.getElementById('valor').value = atividade.valor;
                     document.getElementById('data_entrega').value = atividade.data_entrega;
@@ -111,11 +115,12 @@
             event.preventDefault(); // Evita o envio do formulário padrão
 
             const id = document.getElementById('atividade_id').value;
+            const nome = document.getElementById('nome').value;
             const turmaId = document.getElementById('turma_id').value;
             const valor = parseInt(document.getElementById('valor').value);
             const dataEntrega = document.getElementById('data_entrega').value;
 
-            if (!id || !turmaId || !valor || !dataEntrega) {
+            if (!id || !nome || !turmaId || !valor || !dataEntrega) {
                 alert('Todos os campos devem ser preenchidos.');
                 return;
             }
@@ -126,6 +131,7 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    nome: nome,  // Envia o nome da atividade
                     turma_id: parseInt(turmaId),
                     valor: valor,
                     data_entrega: dataEntrega
