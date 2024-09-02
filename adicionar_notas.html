@@ -127,49 +127,48 @@
 
         // Função para carregar o professor e atividades da turma selecionada
         function carregarInformacoesTurma(turmaId) {
-        // Obter informações da turma
-        fetch(`http://167.234.254.164:8088/turmas/${turmaId}`)
-            .then(response => response.json())
-            .then(turma => {
-                // Armazenar o ID do professor no dataset do elemento turma_id
-                document.getElementById('turma_id').dataset.professorId = turma.professor_id;
+            // Obter informações da turma
+            fetch(`http://167.234.254.164:8088/turmas/${turmaId}`)
+                .then(response => response.json())
+                .then(turma => {
+                    // Armazenar o ID do professor no dataset do elemento turma_id
+                    document.getElementById('turma_id').dataset.professorId = turma.professor_id;
 
-                // Obter o nome do professor
-                fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
-                    .then(response => response.json())
-                    .then(professor => {
-                        const professorP = document.getElementById('professor');
-                        if (professor && professor.nome) {
-                            professorP.textContent = `Professor: ${professor.nome}`;
-                            document.getElementById('professorSection').classList.remove('hidden');
-                        } else {
-                            professorP.textContent = 'Professor não disponível';
-                            document.getElementById('professorSection').classList.remove('hidden');
-                        }
-                    })
-                    .catch(error => alert('Erro ao carregar o professor: ' + error));
-
-                // Obter atividades da turma
-                fetch('http://167.234.254.164:8088/atividades')
-                    .then(response => response.json())
-                    .then(atividades => {
-                        const select = document.getElementById('atividade_id');
-                        select.innerHTML = '<option value="">Selecione uma atividade</option>'; // Limpa o select antes de preencher
-
-                        atividades.forEach(atividade => {
-                            if (atividade.turma_id === parseInt(turmaId)) {
-                                select.innerHTML += `<option value="${atividade.id}" data-valor="${atividade.valor}">Atividade ${atividade.id} - Valor ${atividade.valor}</option>`;
+                    // Obter o nome do professor
+                    fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
+                        .then(response => response.json())
+                        .then(professor => {
+                            const professorP = document.getElementById('professor');
+                            if (professor && professor.nome) {
+                                professorP.textContent = `Professor: ${professor.nome}`;
+                                document.getElementById('professorSection').classList.remove('hidden');
+                            } else {
+                                professorP.textContent = 'Professor não disponível';
+                                document.getElementById('professorSection').classList.remove('hidden');
                             }
-                        });
+                        })
+                        .catch(error => alert('Erro ao carregar o professor: ' + error));
 
-                        document.getElementById('atividadeSection').classList.remove('hidden');
-                        document.getElementById('carregarAlunos').classList.remove('hidden');
-                    })
-                    .catch(error => alert('Erro ao carregar atividades: ' + error));
-            })
-            .catch(error => alert('Erro ao carregar informações da turma: ' + error));
-    }
+                    // Obter atividades da turma
+                    fetch('http://167.234.254.164:8088/atividades')
+                        .then(response => response.json())
+                        .then(atividades => {
+                            const select = document.getElementById('atividade_id');
+                            select.innerHTML = '<option value="">Selecione uma atividade</option>'; // Limpa o select antes de preencher
 
+                            atividades.forEach(atividade => {
+                                if (atividade.turma_id === parseInt(turmaId)) {
+                                    select.innerHTML += `<option value="${atividade.id}" data-valor="${atividade.valor}">Atividade ${atividade.id} - Valor ${atividade.valor}</option>`;
+                                }
+                            });
+
+                            document.getElementById('atividadeSection').classList.remove('hidden');
+                            document.getElementById('carregarAlunos').classList.remove('hidden');
+                        })
+                        .catch(error => alert('Erro ao carregar atividades: ' + error));
+                })
+                .catch(error => alert('Erro ao carregar informações da turma: ' + error));
+        }
 
         // Função para carregar os alunos da turma selecionada
         function carregarAlunos() {
@@ -220,26 +219,21 @@
 
         // Função para enviar todas as notas ao pressionar "Finalizar"
         function finalizarEnvio() {
-            
-
             const inputsNotas = document.querySelectorAll('[id^="nota_"]');
 
             inputsNotas.forEach(input => {
                 const alunoId = input.id.split('_')[1];
                 const turmaId = document.getElementById('turma_id').value;
                 const atividadeId = document.getElementById('atividade_id').value;
-                const professorId = document.getElementById('turma_id').value; // Usa o ID da turma para obter o ID do professor
+                const professorId = document.getElementById('turma_id').dataset.professorId;
                 const notaObtida = input.value;
 
-                console.log(alunoId, turmaId, atividadeId, professorId, notaObtida)
                 const notaObj = {
                     aluno_id: parseInt(alunoId),
                     atividade_id: parseInt(atividadeId),
                     professor_id: parseInt(professorId),
                     valor_obtido: parseFloat(notaObtida)
                 };
-
-                console.log(JSON.stringify(notaObj))
 
                 fetch('http://167.234.254.164:8088/notas', {
                     method: 'POST',
@@ -259,10 +253,10 @@
                         window.location.href = 'notas.html'; // Redireciona após o envio das notas
                     })
                     .catch(error => alert('Erro ao adicionar a nota: ' + error));
-                    console.log('rodou um post')
             });
         }
 
+        // Eventos
         document.getElementById('turma_id').addEventListener('change', function() {
             const turmaId = this.value;
             if (turmaId) {
@@ -271,12 +265,10 @@
         });
 
         document.getElementById('carregarAlunos').addEventListener('click', carregarAlunos);
-
         document.getElementById('finalizarBtn').addEventListener('click', finalizarEnvio);
 
-        // Carregar turmas ao carregar a página
+        // Carrega as turmas quando a página é carregada
         window.onload = carregarTurmas;
     </script>
-
 </body>
 </html>
