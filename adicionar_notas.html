@@ -127,45 +127,49 @@
 
         // Função para carregar o professor e atividades da turma selecionada
         function carregarInformacoesTurma(turmaId) {
-            // Obter informações da turma
-            fetch(`http://167.234.254.164:8088/turmas/${turmaId}`)
-                .then(response => response.json())
-                .then(turma => {
-                    // Obter o nome do professor
-                    fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
-                        .then(response => response.json())
-                        .then(professor => {
-                            const professorP = document.getElementById('professor');
-                            if (professor && professor.nome) {
-                                professorP.textContent = `Professor: ${professor.nome}`;
-                                document.getElementById('professorSection').classList.remove('hidden');
-                            } else {
-                                professorP.textContent = 'Professor não disponível';
-                                document.getElementById('professorSection').classList.remove('hidden');
+        // Obter informações da turma
+        fetch(`http://167.234.254.164:8088/turmas/${turmaId}`)
+            .then(response => response.json())
+            .then(turma => {
+                // Armazenar o ID do professor no dataset do elemento turma_id
+                document.getElementById('turma_id').dataset.professorId = turma.professor_id;
+
+                // Obter o nome do professor
+                fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
+                    .then(response => response.json())
+                    .then(professor => {
+                        const professorP = document.getElementById('professor');
+                        if (professor && professor.nome) {
+                            professorP.textContent = `Professor: ${professor.nome}`;
+                            document.getElementById('professorSection').classList.remove('hidden');
+                        } else {
+                            professorP.textContent = 'Professor não disponível';
+                            document.getElementById('professorSection').classList.remove('hidden');
+                        }
+                    })
+                    .catch(error => alert('Erro ao carregar o professor: ' + error));
+
+                // Obter atividades da turma
+                fetch('http://167.234.254.164:8088/atividades')
+                    .then(response => response.json())
+                    .then(atividades => {
+                        const select = document.getElementById('atividade_id');
+                        select.innerHTML = '<option value="">Selecione uma atividade</option>'; // Limpa o select antes de preencher
+
+                        atividades.forEach(atividade => {
+                            if (atividade.turma_id === parseInt(turmaId)) {
+                                select.innerHTML += `<option value="${atividade.id}" data-valor="${atividade.valor}">Atividade ${atividade.id} - Valor ${atividade.valor}</option>`;
                             }
-                        })
-                        .catch(error => alert('Erro ao carregar o professor: ' + error));
+                        });
 
-                    // Obter atividades da turma
-                    fetch('http://167.234.254.164:8088/atividades')
-                        .then(response => response.json())
-                        .then(atividades => {
-                            const select = document.getElementById('atividade_id');
-                            select.innerHTML = '<option value="">Selecione uma atividade</option>'; // Limpa o select antes de preencher
+                        document.getElementById('atividadeSection').classList.remove('hidden');
+                        document.getElementById('carregarAlunos').classList.remove('hidden');
+                    })
+                    .catch(error => alert('Erro ao carregar atividades: ' + error));
+            })
+            .catch(error => alert('Erro ao carregar informações da turma: ' + error));
+    }
 
-                            atividades.forEach(atividade => {
-                                if (atividade.turma_id === parseInt(turmaId)) {
-                                    select.innerHTML += `<option value="${atividade.id}" data-valor="${atividade.valor}">Atividade ${atividade.id} - Valor ${atividade.valor}</option>`;
-                                }
-                            });
-
-                            document.getElementById('atividadeSection').classList.remove('hidden');
-                            document.getElementById('carregarAlunos').classList.remove('hidden');
-                        })
-                        .catch(error => alert('Erro ao carregar atividades: ' + error));
-                })
-                .catch(error => alert('Erro ao carregar informações da turma: ' + error));
-        }
 
         // Função para carregar os alunos da turma selecionada
         function carregarAlunos() {
@@ -246,7 +250,7 @@
                 })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error(response);
+                            throw new Error(`Erro: ${errorData.message || response.statusText}`);
                         }
                         return response.json();
                     })
