@@ -188,59 +188,63 @@
                     tbody.innerHTML = ''; // Limpa o conteúdo existente
 
                     const promises = notas.map(nota => {
-                        // Obtém turma e professor associados à nota
-                        return fetch(`http://167.234.254.164:8088/turmas/${nota.turma_id}`)
-                            .then(response => response.json())
-                            .then(turma => {
-                                return fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
-                                    .then(response => response.json())
-                                    .then(professor => {
-                                        const tr = document.createElement('tr');
-                                        const tdAluno = document.createElement('td');
-                                        const tdAtividade = document.createElement('td');
-                                        const tdTurma = document.createElement('td');
-                                        const tdProfessor = document.createElement('td');
-                                        const tdValorTotal = document.createElement('td');
-                                        const tdValorObtido = document.createElement('td');
-                                        const tdAcoes = document.createElement('td');
+                        // Verifica se turma_id e aluno_id estão definidos antes de fazer as requisições
+                        if (nota.turma_id && nota.aluno_id && nota.atividade_id) {
+                            return fetch(`http://167.234.254.164:8088/turmas/${nota.turma_id}`)
+                                .then(response => response.json())
+                                .then(turma => {
+                                    if (turma && turma.professor_id) {
+                                        return fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
+                                            .then(response => response.json())
+                                            .then(professor => {
+                                                const tr = document.createElement('tr');
+                                                const tdAluno = document.createElement('td');
+                                                const tdAtividade = document.createElement('td');
+                                                const tdTurma = document.createElement('td');
+                                                const tdProfessor = document.createElement('td');
+                                                const tdValorTotal = document.createElement('td');
+                                                const tdValorObtido = document.createElement('td');
+                                                const tdAcoes = document.createElement('td');
 
-                                        // Cria o conteúdo da linha
-                                        tdAluno.textContent = window.alunosMap[nota.aluno_id] || 'Desconhecido';
-                                        tdAtividade.textContent = window.atividadesMap[nota.atividade_id] || 'Desconhecida';
-                                        tdTurma.textContent = turma.nome || 'Desconhecida';
-                                        tdProfessor.textContent = professor.nome || 'Desconhecido';
-                                        tdValorTotal.textContent = nota.valor_total;
-                                        tdValorObtido.textContent = nota.valor_obtido;
+                                                // Cria o conteúdo da linha
+                                                tdAluno.textContent = window.alunosMap[nota.aluno_id] || 'Desconhecido';
+                                                tdAtividade.textContent = window.atividadesMap[nota.atividade_id] || 'Desconhecida';
+                                                tdTurma.textContent = turma.nome || 'Desconhecida';
+                                                tdProfessor.textContent = professor.nome || 'Desconhecido';
+                                                tdValorTotal.textContent = nota.valor_total;
+                                                tdValorObtido.textContent = nota.valor_obtido;
 
-                                        // Botões de ação
-                                        const btnEditar = document.createElement('button');
-                                        btnEditar.textContent = 'Editar';
-                                        btnEditar.className = 'button';
-                                        btnEditar.onclick = () => abrirPopup(nota);
+                                                // Botões de ação
+                                                const btnEditar = document.createElement('button');
+                                                btnEditar.textContent = 'Editar';
+                                                btnEditar.className = 'button';
+                                                btnEditar.onclick = () => abrirPopup(nota);
 
-                                        const btnRemover = document.createElement('button');
-                                        btnRemover.textContent = 'Remover';
-                                        btnRemover.className = 'button';
-                                        btnRemover.onclick = () => {
-                                            if (confirm('Tem certeza que deseja remover esta nota?')) {
-                                                deletarNota(nota.id);
-                                            }
-                                        };
+                                                const btnRemover = document.createElement('button');
+                                                btnRemover.textContent = 'Remover';
+                                                btnRemover.className = 'button';
+                                                btnRemover.onclick = () => {
+                                                    if (confirm('Tem certeza que deseja remover esta nota?')) {
+                                                        deletarNota(nota.id);
+                                                    }
+                                                };
 
-                                        tdAcoes.appendChild(btnEditar);
-                                        tdAcoes.appendChild(btnRemover);
+                                                tdAcoes.appendChild(btnEditar);
+                                                tdAcoes.appendChild(btnRemover);
 
-                                        tr.appendChild(tdAluno);
-                                        tr.appendChild(tdAtividade);
-                                        tr.appendChild(tdTurma);
-                                        tr.appendChild(tdProfessor);
-                                        tr.appendChild(tdValorTotal);
-                                        tr.appendChild(tdValorObtido);
-                                        tr.appendChild(tdAcoes);
+                                                tr.appendChild(tdAluno);
+                                                tr.appendChild(tdAtividade);
+                                                tr.appendChild(tdTurma);
+                                                tr.appendChild(tdProfessor);
+                                                tr.appendChild(tdValorTotal);
+                                                tr.appendChild(tdValorObtido);
+                                                tr.appendChild(tdAcoes);
 
-                                        tbody.appendChild(tr);
-                                    });
-                            });
+                                                tbody.appendChild(tr);
+                                            });
+                                    }
+                                });
+                        }
                     });
 
                     // Aguarda todas as promessas serem resolvidas
@@ -258,7 +262,7 @@
             document.querySelector('.popup-overlay').style.display = 'flex';
         }
 
-        // Função para fechar o popup
+        // Função para fechar o popup de edição
         function fecharPopup() {
             document.querySelector('.popup-overlay').style.display = 'none';
         }
