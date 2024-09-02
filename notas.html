@@ -306,6 +306,7 @@
             })
             .then(response => response.json())
             .then(() => {
+                alert(JSON.stringify(data))
                 fecharPopup();
                 carregarNotas();
             })
