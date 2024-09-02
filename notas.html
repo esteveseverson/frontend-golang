@@ -159,33 +159,21 @@
 
     <script>
         let notaGlobal = {};
-        let alunoMap = {};
-        let atividadeMap = {};
-        let turmaMap = {};
-        let professorMap = {};
 
-        // Função para carregar dados
+        // Função para carregar dados dos alunos, atividades, turmas e professores
         function carregarDados() {
             return Promise.all([
-                fetch('http://167.234.254.164:8088/turmas').then(response => response.json()).then(turmas => {
-                    turmas.forEach(turma => {
-                        turmaMap[turma.id] = turma;
-                    });
+                fetch('http://167.234.254.164:8088/alunos').then(response => response.json()).then(alunos => {
+                    window.alunosMap = alunos.reduce((map, aluno) => {
+                        map[aluno.id] = aluno.nome;
+                        return map;
+                    }, {});
                 }),
                 fetch('http://167.234.254.164:8088/atividades').then(response => response.json()).then(atividades => {
-                    atividades.forEach(atividade => {
-                        atividadeMap[atividade.id] = atividade;
-                    });
-                }),
-                fetch('http://167.234.254.164:8088/professores').then(response => response.json()).then(professores => {
-                    professores.forEach(professor => {
-                        professorMap[professor.id] = professor.nome;
-                    });
-                }),
-                fetch('http://167.234.254.164:8088/alunos').then(response => response.json()).then(alunos => {
-                    alunos.forEach(aluno => {
-                        alunoMap[aluno.id] = aluno.nome;
-                    });
+                    window.atividadesMap = atividades.reduce((map, atividade) => {
+                        map[atividade.id] = atividade.nome;
+                        return map;
+                    }, {});
                 })
             ])
             .catch(error => alert('Erro ao carregar os dados.'));
@@ -201,14 +189,12 @@
 
                     const promises = notas.map(nota => {
                         // Obtém turma e professor associados à nota
-                        return fetch(`http://167.234.254.164:8088/atividades/${nota.atividade_id}`)
+                        return fetch(`http://167.234.254.164:8088/turmas/${nota.turma_id}`)
                             .then(response => response.json())
-                            .then(atividade => {
-                                const turma = turmaMap[atividade.turma_id];
-                                return fetch(`http://167.234.254.164:8088/turmas/${atividade.turma_id}`)
+                            .then(turma => {
+                                return fetch(`http://167.234.254.164:8088/professores/${turma.professor_id}`)
                                     .then(response => response.json())
-                                    .then(turmaData => {
-                                        const professor = professorMap[turmaData.professor_id];
+                                    .then(professor => {
                                         const tr = document.createElement('tr');
                                         const tdAluno = document.createElement('td');
                                         const tdAtividade = document.createElement('td');
@@ -219,10 +205,10 @@
                                         const tdAcoes = document.createElement('td');
 
                                         // Cria o conteúdo da linha
-                                        tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
-                                        tdAtividade.textContent = atividade.nome || 'Desconhecida';
-                                        tdTurma.textContent = turma || 'Desconhecida';
-                                        tdProfessor.textContent = professor || 'Desconhecido';
+                                        tdAluno.textContent = window.alunosMap[nota.aluno_id] || 'Desconhecido';
+                                        tdAtividade.textContent = window.atividadesMap[nota.atividade_id] || 'Desconhecida';
+                                        tdTurma.textContent = turma.nome || 'Desconhecida';
+                                        tdProfessor.textContent = professor.nome || 'Desconhecido';
                                         tdValorTotal.textContent = nota.valor_total;
                                         tdValorObtido.textContent = nota.valor_obtido;
 
