@@ -169,7 +169,7 @@
             return Promise.all([
                 fetch('http://167.234.254.164:8088/turmas').then(response => response.json()).then(turmas => {
                     turmas.forEach(turma => {
-                        turmaMap[turma.id] = turma.nome;
+                        turmaMap[turma.id] = turma;
                     });
                 }),
                 fetch('http://167.234.254.164:8088/atividades').then(response => response.json()).then(atividades => {
@@ -199,134 +199,125 @@
                     const tbody = document.querySelector('#notas tbody');
                     tbody.innerHTML = ''; // Limpa o conteúdo existente
 
-                    notas.forEach(nota => {
-                        const tr = document.createElement('tr');
-                        const tdAluno = document.createElement('td');
-                        const tdAtividade = document.createElement('td');
-                        const tdTurma = document.createElement('td');
-                        const tdProfessor = document.createElement('td');
-                        const tdValorTotal = document.createElement('td');
-                        const tdValorObtido = document.createElement('td');
-                        const tdAcoes = document.createElement('td');
+                    const promises = notas.map(nota => {
+                        // Obtém turma e professor associados à nota
+                        return fetch(`http://167.234.254.164:8088/atividades/${nota.atividade_id}`)
+                            .then(response => response.json())
+                            .then(atividade => {
+                                const turma = turmaMap[atividade.turma_id];
+                                return fetch(`http://167.234.254.164:8088/turmas/${atividade.turma_id}`)
+                                    .then(response => response.json())
+                                    .then(turmaData => {
+                                        const professor = professorMap[turmaData.professor_id];
+                                        const tr = document.createElement('tr');
+                                        const tdAluno = document.createElement('td');
+                                        const tdAtividade = document.createElement('td');
+                                        const tdTurma = document.createElement('td');
+                                        const tdProfessor = document.createElement('td');
+                                        const tdValorTotal = document.createElement('td');
+                                        const tdValorObtido = document.createElement('td');
+                                        const tdAcoes = document.createElement('td');
 
-                        // Cria o conteúdo da linha
-                        tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
-                        tdAtividade.textContent = atividadeMap[nota.atividade_id] ? atividadeMap[nota.atividade_id].nome : 'Desconhecida';
-                        tdTurma.textContent = turmaMap[nota.turma_id] || 'Desconhecida';
-                        tdProfessor.textContent = professorMap[nota.professor_id] || 'Desconhecido';
-                        tdValorTotal.textContent = nota.valor_total;
-                        tdValorObtido.textContent = nota.valor_obtido;
+                                        // Cria o conteúdo da linha
+                                        tdAluno.textContent = alunoMap[nota.aluno_id] || 'Desconhecido';
+                                        tdAtividade.textContent = atividade.nome || 'Desconhecida';
+                                        tdTurma.textContent = turma || 'Desconhecida';
+                                        tdProfessor.textContent = professor || 'Desconhecido';
+                                        tdValorTotal.textContent = nota.valor_total;
+                                        tdValorObtido.textContent = nota.valor_obtido;
 
-                        // Botões de ação
-                        const btnEditar = document.createElement('button');
-                        btnEditar.textContent = 'Editar';
-                        btnEditar.className = 'button';
-                        btnEditar.onclick = () => abrirPopup(nota);
+                                        // Botões de ação
+                                        const btnEditar = document.createElement('button');
+                                        btnEditar.textContent = 'Editar';
+                                        btnEditar.className = 'button';
+                                        btnEditar.onclick = () => abrirPopup(nota);
 
-                        const btnRemover = document.createElement('button');
-                        btnRemover.textContent = 'Remover';
-                        btnRemover.className = 'button';
-                        btnRemover.onclick = () => {
-                            if (confirm('Tem certeza que deseja remover esta nota?')) {
-                                deletarNota(nota.id);
-                            }
-                        };
+                                        const btnRemover = document.createElement('button');
+                                        btnRemover.textContent = 'Remover';
+                                        btnRemover.className = 'button';
+                                        btnRemover.onclick = () => {
+                                            if (confirm('Tem certeza que deseja remover esta nota?')) {
+                                                deletarNota(nota.id);
+                                            }
+                                        };
 
-                        tdAcoes.appendChild(btnEditar);
-                        tdAcoes.appendChild(btnRemover);
+                                        tdAcoes.appendChild(btnEditar);
+                                        tdAcoes.appendChild(btnRemover);
 
-                        tr.appendChild(tdAluno);
-                        tr.appendChild(tdAtividade);
-                        tr.appendChild(tdTurma);
-                        tr.appendChild(tdProfessor);
-                        tr.appendChild(tdValorTotal);
-                        tr.appendChild(tdValorObtido);
-                        tr.appendChild(tdAcoes);
+                                        tr.appendChild(tdAluno);
+                                        tr.appendChild(tdAtividade);
+                                        tr.appendChild(tdTurma);
+                                        tr.appendChild(tdProfessor);
+                                        tr.appendChild(tdValorTotal);
+                                        tr.appendChild(tdValorObtido);
+                                        tr.appendChild(tdAcoes);
 
-                        tbody.appendChild(tr);
+                                        tbody.appendChild(tr);
+                                    });
+                            });
                     });
+
+                    // Aguarda todas as promessas serem resolvidas
+                    Promise.all(promises).catch(error => alert('Erro ao carregar as notas.'));
                 })
                 .catch(error => alert('Erro ao carregar as notas.'));
         }
 
-        // Função para abrir o popup
+        // Função para abrir o popup de edição
         function abrirPopup(nota) {
             notaGlobal = nota;
-            const popupOverlay = document.getElementById('popupOverlay');
-            const formEditarNota = document.getElementById('formEditarNota');
-            const alunoSelect = document.getElementById('aluno');
-            const atividadeSelect = document.getElementById('atividade');
-            const valorObtidoInput = document.getElementById('valorObtido');
-
-            console.log(valorObtidoInput)
-            
-            // Preenche as opções de aluno e atividade
-            alunoSelect.innerHTML = `<option value="${nota.aluno_id}">${alunoMap[nota.aluno_id]}</option>`;
-            atividadeSelect.innerHTML = `<option value="${nota.atividade_id}">${atividadeMap[nota.atividade_id].nome}</option>`;
-
-            valorObtidoInput.value = nota.valor_obtido;
-
-            popupOverlay.style.display = 'flex';
+            document.getElementById('aluno').value = nota.aluno_id;
+            document.getElementById('atividade').value = nota.atividade_id;
+            document.getElementById('valorObtido').value = nota.valor_obtido;
+            document.querySelector('.popup-overlay').style.display = 'flex';
         }
 
         // Função para fechar o popup
         function fecharPopup() {
-            document.getElementById('popupOverlay').style.display = 'none';
+            document.querySelector('.popup-overlay').style.display = 'none';
         }
 
         // Função para atualizar a nota
-        document.getElementById('formEditarNota').onsubmit = function(event) {
+        document.getElementById('formEditarNota').addEventListener('submit', function(event) {
             event.preventDefault();
-
             const valorObtido = document.getElementById('valorObtido').value;
-
-            console.log(
-                JSON.stringify({
-                    aluno_id: notaGlobal.aluno_id,
-                    atividade_id: notaGlobal.atividade_id,
-                    turma_id: notaGlobal.turma_id,
-                    professor_id: notaGlobal.professor_id,
-                    valor_total: notaGlobal.valor_total,
-                    valor_obtido: parseFloat(valorObtido)})
-            )
 
             fetch(`http://167.234.254.164:8088/notas/${notaGlobal.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    aluno_id: notaGlobal.aluno_id,
-                    atividade_id: notaGlobal.atividade_id,
-                    turma_id: notaGlobal.turma_id,
-                    professor_id: notaGlobal.professor_id,
-                    valor_total: notaGlobal.valor_total,
-                    valor_obtido: parseFloat(valorObtido)
-                })
+                body: JSON.stringify({ valor_obtido: valorObtido })
             })
-            .then(response => response.json())
-            .then(() => {
-                fecharPopup();
-                carregarNotas();
+            .then(response => {
+                if (response.ok) {
+                    fecharPopup();
+                    carregarNotas();
+                } else {
+                    alert('Erro ao atualizar a nota.');
+                }
             })
             .catch(error => alert('Erro ao atualizar a nota.'));
-        }
+        });
 
-        // Função para deletar a nota
+        // Função para deletar nota
         function deletarNota(id) {
             fetch(`http://167.234.254.164:8088/notas/${id}`, {
                 method: 'DELETE'
             })
-            .then(() => carregarNotas())
+            .then(response => {
+                if (response.ok) {
+                    carregarNotas();
+                } else {
+                    alert('Erro ao remover a nota.');
+                }
+            })
             .catch(error => alert('Erro ao remover a nota.'));
         }
 
-        // Inicializa a página
-        window.onload = function() {
-            carregarDados().then(() => {
-                carregarNotas();
-            });
-        }
+        // Carregar dados e notas ao carregar a página
+        carregarDados().then(carregarNotas);
+
     </script>
 
 </body>
