@@ -235,7 +235,7 @@
                     professor_id: parseInt(professorId),
                     valor_obtido: notaObtida
                 };
-                
+
                 console.log(JSON.stringify(notaObj))
 
                 fetch('http://167.234.254.164:8088/notas', {
@@ -243,7 +243,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: c
+                    body: JSON.stringify(notaObj)
                 })
                     .then(response => {
                         if (!response.ok) {
