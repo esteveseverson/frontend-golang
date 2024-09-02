@@ -158,7 +158,7 @@
 
                             atividades.forEach(atividade => {
                                 if (atividade.turma_id === parseInt(turmaId)) {
-                                    select.innerHTML += `<option value="${atividade.id}" data-valor="${atividade.valor}">Atividade ${atividade.id} - Valor ${atividade.valor}</option>`;
+                                    select.innerHTML += `<option value="${atividade.id}" data-valor="${atividade.valor}">${atividade.nome} - Valor ${atividade.valor}</option>`;
                                 }
                             });
 
