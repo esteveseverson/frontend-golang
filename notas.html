@@ -270,19 +270,29 @@
         // Função para atualizar a nota
         document.getElementById('formEditarNota').addEventListener('submit', function(event) {
             event.preventDefault();
-            const valorObtido = document.getElementById('valorObtido').value;
+
+            const valorObtido = parseFloat(document.getElementById('valorObtido').value);
+
+            const updatedNota = {
+                aluno_id: notaGlobal.aluno_id,
+                atividade_id: notaGlobal.atividade_id,
+                turma_id: notaGlobal.turma_id,
+                valor_total: notaGlobal.valor_total,
+                valor_obtido: valorObtido,
+            };
 
             fetch(`http://167.234.254.164:8088/notas/${notaGlobal.id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ valor_obtido: valorObtido })
+                body: JSON.stringify(updatedNota),
             })
             .then(response => {
                 if (response.ok) {
-                    fecharPopup();
+                    alert('Nota atualizada com sucesso!');
                     carregarNotas();
+                    fecharPopup();
                 } else {
                     alert('Erro ao atualizar a nota.');
                 }
@@ -290,13 +300,14 @@
             .catch(error => alert('Erro ao atualizar a nota.'));
         });
 
-        // Função para deletar nota
+        // Função para deletar uma nota
         function deletarNota(id) {
             fetch(`http://167.234.254.164:8088/notas/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
             })
             .then(response => {
                 if (response.ok) {
+                    alert('Nota removida com sucesso!');
                     carregarNotas();
                 } else {
                     alert('Erro ao remover a nota.');
@@ -305,10 +316,10 @@
             .catch(error => alert('Erro ao remover a nota.'));
         }
 
-        // Carregar dados e notas ao carregar a página
-        carregarDados().then(carregarNotas);
-
+        // Carrega os dados e notas ao carregar a página
+        window.onload = function() {
+            carregarDados().then(carregarNotas);
+        };
     </script>
-
 </body>
 </html>
