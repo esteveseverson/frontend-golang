@@ -60,20 +60,6 @@
         .hidden {
             display: none;
         }
-
-        .check-btn {
-            padding: 5px 10px;
-            margin-left: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .check-btn:hover {
-            background-color: #45a049;
-        }
     </style>
 </head>
 <body>
@@ -213,12 +199,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${alunosFiltrados.map(aluno => `
-                                <tr>
+                            ${alunosFiltrados.map(aluno => 
+                                `<tr>
                                     <td>${aluno.nome}</td>
                                     <td><input type="number" id="nota_${aluno.id}" min="0" max="100" required></td>
-                                </tr>
-                            `).join('')}
+                                </tr>`
+                            ).join('')}
                         </tbody>
                     `;
                     container.appendChild(table);
@@ -228,22 +214,17 @@
                 .catch(error => alert('Erro ao carregar os alunos: ' + error));
         }
 
-        // Função para enviar as notas de todos os alunos preenchidos
-        function finalizarNotas() {
+        // Função para enviar todas as notas ao pressionar "Finalizar"
+        function finalizarEnvio() {
             const turmaId = document.getElementById('turma_id').value;
             const atividadeId = document.getElementById('atividade_id').value;
             const professorId = document.getElementById('turma_id').value; // Usa o ID da turma para obter o ID do professor
 
-            const inputs = document.querySelectorAll('[id^="nota_"]');
+            const inputsNotas = document.querySelectorAll('[id^="nota_"]');
 
-            inputs.forEach(input => {
+            inputsNotas.forEach(input => {
                 const alunoId = input.id.split('_')[1];
                 const notaObtida = parseFloat(input.value);
-
-                if (isNaN(notaObtida)) {
-                    alert(`Nota inválida para o aluno ID ${alunoId}`);
-                    return;
-                }
 
                 const notaObj = {
                     aluno_id: parseInt(alunoId),
@@ -253,7 +234,6 @@
                     valor_obtido: notaObtida
                 };
 
-                // Enviar nota para cada aluno
                 fetch('http://167.234.254.164:8088/notas', {
                     method: 'POST',
                     headers: {
@@ -261,18 +241,20 @@
                     },
                     body: JSON.stringify(notaObj)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro ao enviar a nota.');
-                    }
-                })
-                .catch(error => alert(`Erro ao enviar a nota para o aluno ID ${alunoId}: ` + error));
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erro ao adicionar a nota.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        document.getElementById('message').textContent = 'Nota enviada com sucesso!';
+                        window.location.href = 'notas.html'; // Redireciona após o envio das notas
+                    })
+                    .catch(error => alert('Erro ao adicionar a nota: ' + error));
             });
-
-            alert('Notas enviadas com sucesso.');
         }
 
-        // Adiciona eventos aos elementos
         document.getElementById('turma_id').addEventListener('change', function() {
             const turmaId = this.value;
             if (turmaId) {
@@ -281,10 +263,12 @@
         });
 
         document.getElementById('carregarAlunos').addEventListener('click', carregarAlunos);
-        document.getElementById('finalizarBtn').addEventListener('click', finalizarNotas);
 
-        // Carregar as turmas no carregamento da página
+        document.getElementById('finalizarBtn').addEventListener('click', finalizarEnvio);
+
+        // Carregar turmas ao carregar a página
         window.onload = carregarTurmas;
     </script>
+
 </body>
 </html>
